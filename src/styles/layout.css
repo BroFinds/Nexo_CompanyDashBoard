@@ -1,0 +1,161 @@
+/* =========================================
+   Layout & Responsive Grid System
+   ========================================= */
+
+/* Main Layout Wrapper */
+.layout-wrapper {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* Sidebar Container */
+.sidebar-container {
+    width: 260px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 50;
+    padding: var(--spacing-md);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    margin-left: 260px;
+    /* Desktop default */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.content-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    /* 4 cols desktop */
+    gap: var(--spacing-lg);
+}
+
+/* Header Styles */
+.header-sticky {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--spacing-xl);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    /* Glassmorphism */
+    background: rgba(248, 250, 252, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Mobile Menu Toggle (Hidden on Desktop) */
+.mobile-menu-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--color-text-main);
+    padding: 8px;
+    margin-right: 12px;
+    cursor: pointer;
+}
+
+/* Helper: Modal Grid */
+.modal-grid-2col {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* =========================================
+   Media Queries
+   ========================================= */
+
+/* Tablet & Smaller (Max 1024px) */
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+        /* 2 cols tablet */
+    }
+}
+
+/* Mobile Custom (Max 768px) */
+@media (max-width: 768px) {
+
+    /* Layout Changes */
+    .sidebar-container {
+        transform: translateX(-100%);
+        /* Hide sidebar off-canvas */
+        width: 280px;
+        /* Slightly wider for touch */
+        background: var(--bg-body);
+        /* Ensure opacity */
+    }
+
+    .sidebar-container.open {
+        transform: translateX(0);
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
+    }
+
+    .main-content {
+        margin-left: 0;
+        /* Remove margin */
+    }
+
+    .header-sticky {
+        padding: 0 var(--spacing-md);
+        height: 64px;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        /* 1 col mobile */
+        gap: var(--spacing-md);
+    }
+
+    /* Show Hamburger */
+    .mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Padding adjustments */
+    .main-content>main {
+        padding: var(--spacing-md);
+    }
+
+    /* Stack Modal Grids */
+    .modal-grid-2col {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Backdrop for Mobile Sidebar */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 45;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.sidebar-overlay.open {
+    display: block;
+    opacity: 1;
+}
