@@ -3,6 +3,7 @@ import LoginPage from '@pages/LoginPage';
 import DashboardPage from '@pages/DashboardPage';
 import EmployeesPage from '@pages/EmployeesPage';
 import ProductsPage from '@pages/ProductsPage';
+import ReportsPage from '@pages/ReportsPage';
 
 import { GlobalProvider } from './context/GlobalContext';
 
@@ -24,11 +25,7 @@ function App() {
         {currentView === 'dashboard' && <DashboardPage currentView={currentView} onNavigate={handleNavigate} />}
         {currentView === 'employees' && <EmployeesPage currentView={currentView} onNavigate={handleNavigate} />}
         {currentView === 'products' && <ProductsPage currentView={currentView} onNavigate={handleNavigate} />}
-        
-        {/* Fallbacks for other placeholder pages to keep layout valid */}
-        {(currentView === 'reports') && (
-           <DashboardPage currentView={currentView} onNavigate={handleNavigate} />
-        )}
+        {currentView === 'reports' && <ReportsPage currentView={currentView} onNavigate={handleNavigate} />}
       </div>
     </GlobalProvider>
   );

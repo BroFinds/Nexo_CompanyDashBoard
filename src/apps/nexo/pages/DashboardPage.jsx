@@ -1,9 +1,9 @@
 import React from 'react';
-import DashboardLayout from '@components/layout/DashboardLayout';
-import Card from '@components/ui/Card';
+import NexoLayout from '../components/NexoLayout';
+import Card from '@shared/components/ui/Card';
 import { ArrowRight, Truck, Users, Warehouse, CreditCard, Lock } from 'lucide-react';
 
-const DashboardPage = ({ currentView, onNavigate }) => {
+const DashboardPage = () => {
   const apps = [
     { 
       id: 'deliwheels', 
@@ -11,7 +11,6 @@ const DashboardPage = ({ currentView, onNavigate }) => {
       desc: 'Logistics & Delivery Operations', 
       status: 'Active',
       icon: Truck,
-      color: 'bg-blue-100 text-blue-600' // using inline styles for now
     },
     { 
       id: 'employees', 
@@ -20,7 +19,6 @@ const DashboardPage = ({ currentView, onNavigate }) => {
       status: 'Locked',
       icon: Users,
       locked: true,
-      color: 'bg-purple-100 text-purple-600'
     },
     { 
       id: 'products', 
@@ -29,7 +27,6 @@ const DashboardPage = ({ currentView, onNavigate }) => {
       status: 'Locked',
       icon: Warehouse,
       locked: true,
-      color: 'bg-orange-100 text-orange-600'
     },
     { 
       id: 'pos', 
@@ -38,16 +35,21 @@ const DashboardPage = ({ currentView, onNavigate }) => {
       status: 'Locked',
       icon: CreditCard,
       locked: true,
-      color: 'bg-emerald-100 text-emerald-600'
     }
   ];
 
+  const handleLaunchApp = (app) => {
+    if (app.locked) return;
+    if (app.id === 'deliwheels') {
+      window.open('/deliwheels', '_blank');
+    }
+  };
+
   return (
-    <DashboardLayout currentView={currentView} onNavigate={onNavigate}>
+    <NexoLayout headerTitle="Dashboard" headerSubtitle="Overview of company operations">
       <div className="dashboard-grid">
         {apps.map((app, index) => {
           const Icon = app.icon;
-          // Staggered animation delay
           const delayClass = index === 0 ? '' : index === 1 ? 'delay-100' : index === 2 ? 'delay-200' : 'delay-300';
           
           return (
@@ -63,6 +65,7 @@ const DashboardPage = ({ currentView, onNavigate }) => {
                   position: 'relative',
                   overflow: 'hidden'
                 }}
+                onClick={() => handleLaunchApp(app)}
               >
                 {/* Header Row */}
                 <div style={{ 
@@ -74,7 +77,7 @@ const DashboardPage = ({ currentView, onNavigate }) => {
                   <div style={{ 
                     width: '48px', 
                     height: '48px', 
-                    backgroundColor: 'var(--bg-body)', // fallback
+                    backgroundColor: 'var(--bg-body)',
                     borderRadius: '12px',
                     display: 'flex',
                     alignItems: 'center',
@@ -151,7 +154,7 @@ const DashboardPage = ({ currentView, onNavigate }) => {
           );
         })}
       </div>
-    </DashboardLayout>
+    </NexoLayout>
   );
 };
 

@@ -1,0 +1,22 @@
+/* =========================================
+   Nexo Theme — Indigo / Violet Palette
+   Scoped via [data-app="nexo"] attribute
+   ========================================= */
+
+[data-app="nexo"] {
+    --color-primary: #6366f1;
+    --color-primary-hover: #4f46e5;
+    --color-primary-subtle: #e0e7ff;
+    --border-focus: #6366f1;
+
+    --gradient-primary: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    --gradient-surface: linear-gradient(to bottom right, #ffffff, #f8fafc);
+
+    --shadow-glow-primary: 0 0 20px rgba(99, 102, 241, 0.25);
+
+    /* Mesh gradient background */
+    background-image:
+        radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.08) 0%, transparent 25%);
+    background-attachment: fixed;
+}

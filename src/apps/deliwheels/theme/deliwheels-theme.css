@@ -1,0 +1,22 @@
+/* =========================================
+   Deliwheels Theme — Ocean Blue Palette
+   Scoped via [data-app="deliwheels"] attribute
+   ========================================= */
+
+[data-app="deliwheels"] {
+    --color-primary: #2563eb;
+    --color-primary-hover: #1d4ed8;
+    --color-primary-subtle: #dbeafe;
+    --border-focus: #2563eb;
+
+    --gradient-primary: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
+    --gradient-surface: linear-gradient(to bottom right, #ffffff, #eff6ff);
+
+    --shadow-glow-primary: 0 0 20px rgba(37, 99, 235, 0.25);
+
+    /* Mesh gradient background */
+    background-image:
+        radial-gradient(circle at 15% 50%, rgba(37, 99, 235, 0.08) 0%, transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(14, 165, 233, 0.08) 0%, transparent 25%);
+    background-attachment: fixed;
+}
