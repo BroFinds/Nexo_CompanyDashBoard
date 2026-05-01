@@ -12,6 +12,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@shared': path.resolve(__dirname, './src/shared'),
+      '@nexo': path.resolve(__dirname, './src/apps/nexo'),
+      '@deliwheels': path.resolve(__dirname, './src/apps/deliwheels'),
+      // Legacy aliases (kept for compatibility with any old imports)
       '@components': path.resolve(__dirname, './src/components'),
       '@pages': path.resolve(__dirname, './src/pages'),
       '@styles': path.resolve(__dirname, './src/styles'),
