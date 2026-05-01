@@ -21,6 +21,15 @@ export const clearSession = () => {
   localStorage.removeItem('nexo_session');
 };
 
+export const pingService = async (serviceName) => {
+  try {
+    const { data } = await api.get(`/api/v1/ping/${serviceName}`, { timeout: 4000 });
+    return { ok: data?.status === 'UP', data };
+  } catch (err) {
+    return { ok: false, error: err };
+  }
+};
+
 export const logout = async () => {
   const session = getSession();
   try {

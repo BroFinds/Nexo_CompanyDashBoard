@@ -14,26 +14,40 @@ const mapEmployee = (e) => ({
   upi_id: e.upiId || e.upi_id || "",
   gender: e.gender || "Male",
   date_of_joining: e.dateOfJoining || e.date_of_joining || "",
-  is_active: e.isActive !== undefined ? e.isActive : (e.is_active !== undefined ? e.is_active : true),
+  is_active:
+    e.isActive !== undefined
+      ? e.isActive
+      : e.is_active !== undefined
+        ? e.is_active
+        : true,
 });
 
-const mapProduct = (p) => ({
-  product_uid: p.productUId || p.product_uid,
-  product_name: p.productName || p.product_name || "",
-  product_code: p.productCode || p.product_code || "",
-  category_uid: p.categoryUId || p.category_uid || "",
-  measurement_uid: p.measurementUId || p.measurement_uid || "",
-  measurement_value:
-    p.sizeText ?? p.measurementValue ?? p.measurement_value ?? 1,
-  is_active: p.isActive !== undefined ? p.isActive : true,
-  product_description: p.productDescription || p.product_description || "",
-  general_price: p.generalPrice ?? 0,
-  wholesale_price: p.wholesalePrice ?? 0,
+const mapMeasurement = (m) => ({
+  measurement_uid: m.measurementUid || m.measurement_uid,
+  measurement_text: m.measurementText || m.measurement_text || "",
+  measurement_code: m.measurementCode || m.measurement_code || "",
 });
+
+const mapProduct = (p) => {
+  const pricing = p.priceMappings?.[0] ?? {};
+  return {
+    product_uid: p.productUid || p.product_uid,
+    product_name: p.productName || p.product_name || "",
+    product_code: p.productCode || p.product_code || "",
+    category_uid: p.categoryUid || p.category_uid || "",
+    measurement_uid: p.measurementUid || p.measurement_uid || "",
+    measurement_text: p.measurement?.measurementText || "",
+    measurement_value: p.sizeText ?? p.measurement_value ?? 1,
+    is_active: p.isActive !== undefined ? p.isActive : true,
+    product_description: p.productDescription || p.product_description || "",
+    general_price: pricing.generalPrice ?? p.generalPrice ?? 0,
+    wholesale_price: pricing.wholesalePrice ?? p.wholesalePrice ?? 0,
+  };
+};
 
 // ── API body builders ────────────────────────────────────────────────────────
 
-const buildEmployeeBody = (formData, companyId) => ({
+const buildEmployeeBody = (formData, companyId, userId) => ({
   companyUid: companyId,
   name: formData.name,
   contactNumber: formData.contact_number,
@@ -43,18 +57,18 @@ const buildEmployeeBody = (formData, companyId) => ({
   gender: formData.gender || null,
   dateOfJoining: formData.date_of_joining || null,
   isActive: formData.is_active,
+  createdBy: userId,
 });
 
-const buildProductBody = (formData, companyId) => ({
+const buildProductBody = (formData, companyId, userId) => ({
   companyUid: companyId,
-  categoryUid: formData.category_uid,
   sizeText: Number(formData.measurement_value) || 0,
   measurementUid: formData.measurement_uid,
   productCode: formData.product_code,
   productName: formData.product_name,
   productDescription: formData.product_description || "",
   isActive: formData.is_active,
-  createdBy: companyId,
+  createdBy: userId,
   generalPrice: formData.general_price ?? 0,
   wholesalePrice: formData.wholesale_price ?? 0,
   appUid: null,
@@ -65,12 +79,15 @@ const buildProductBody = (formData, companyId) => ({
 export const GlobalProvider = ({ children }) => {
   const [employees, setEmployees] = useState([]);
   const [products, setProducts] = useState([]);
+  const [measurements, setMeasurements] = useState([]);
 
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [isLoadingMeasurements, setIsLoadingMeasurements] = useState(false);
 
   const [isEmployeesLoaded, setIsEmployeesLoaded] = useState(false);
   const [isProductsLoaded, setIsProductsLoaded] = useState(false);
+  const [isMeasurementsLoaded, setIsMeasurementsLoaded] = useState(false);
 
   const fetchEmployees = useCallback(async () => {
     if (isEmployeesLoaded) return;
@@ -112,12 +129,26 @@ export const GlobalProvider = ({ children }) => {
     }
   }, [isProductsLoaded]);
 
+  const fetchMeasurements = useCallback(async () => {
+    if (isMeasurementsLoaded) return;
+    setIsLoadingMeasurements(true);
+    try {
+      const { data } = await api.get(`/api/v1/measurements`);
+      setMeasurements((data.content || data).map(mapMeasurement));
+      setIsMeasurementsLoaded(true);
+    } catch (e) {
+      console.error("fetchMeasurements:", e);
+    } finally {
+      setIsLoadingMeasurements(false);
+    }
+  }, [isMeasurementsLoaded]);
+
   const addEmployee = useCallback(async (formData) => {
     const session = getSession();
     try {
       const { data } = await api.post(
         `/api/v1/companies/${session.companyId}/employees`,
-        buildEmployeeBody(formData, session.companyId),
+        buildEmployeeBody(formData, session.companyId, session.userId),
       );
       const mapped = mapEmployee(data);
       setEmployees((prev) => [...prev, mapped]);
@@ -134,7 +165,10 @@ export const GlobalProvider = ({ children }) => {
     try {
       await api.put(
         `/api/v1/companies/${session.companyId}/employees/${uid}`,
-        buildEmployeeBody(updatedEmployee, session.companyId),
+        {
+          ...buildEmployeeBody(updatedEmployee, session.companyId, session.userId),
+          modifiedBy: session.userId,
+        },
       );
       const mapped = mapEmployee(updatedEmployee);
       setEmployees((prev) =>
@@ -150,9 +184,9 @@ export const GlobalProvider = ({ children }) => {
   const addProduct = useCallback(async (formData) => {
     const session = getSession();
     try {
-      const { data } = await api.put(
+      const { data } = await api.post(
         `/api/v1/companies/${session.companyId}/products/create`,
-        buildProductBody(formData, session.companyId),
+        buildProductBody(formData, session.companyId, session.userId),
       );
       const mapped = mapProduct(data);
       setProducts((prev) => [...prev, mapped]);
@@ -169,7 +203,11 @@ export const GlobalProvider = ({ children }) => {
     try {
       const { data } = await api.put(
         `/api/v1/companies/${session.companyId}/products/update/${uid}`,
-        buildProductBody(updatedProduct, session.companyId),
+        {
+          ...buildProductBody(updatedProduct, session.companyId, session.userId),
+          productUid: uid,
+          modifiedBy: session.userId,
+        },
       );
       const mapped = mapProduct(data);
       setProducts((prev) =>
@@ -199,15 +237,19 @@ export const GlobalProvider = ({ children }) => {
     }
   }, []);
 
-  const deleteProduct = useCallback(async (uid) => {
+  const disableProduct = useCallback(async (uid) => {
     const session = getSession();
     try {
-      await api.delete(
-        `/api/v1/companies/${session.companyId}/products/delete/${uid}`,
+      await api.put(
+        `/api/v1/companies/${session.companyId}/products/update/${uid}/status/false`,
       );
-      setProducts((prev) => prev.filter((p) => p.product_uid !== uid));
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.product_uid === uid ? { ...p, is_active: false } : p,
+        ),
+      );
     } catch (e) {
-      console.error("deleteProduct:", e);
+      console.error("disableProduct:", e);
       throw e;
     }
   }, []);
@@ -217,16 +259,19 @@ export const GlobalProvider = ({ children }) => {
       value={{
         employees,
         products,
+        measurements,
         isLoadingEmployees,
         isLoadingProducts,
+        isLoadingMeasurements,
         fetchEmployees,
         fetchProducts,
+        fetchMeasurements,
         addEmployee,
         updateEmployee,
         disableEmployee,
         addProduct,
         updateProduct,
-        deleteProduct,
+        disableProduct,
       }}
     >
       {children}
