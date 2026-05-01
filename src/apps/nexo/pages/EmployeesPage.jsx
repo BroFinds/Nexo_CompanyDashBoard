@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import NexoLayout from "../components/NexoLayout";
+import EmployeeCard from "../components/EmployeeCard";
 import Card from "@shared/components/ui/Card";
 import Button from "@shared/components/ui/Button";
 import Input from "@shared/components/ui/Input";
@@ -145,10 +146,18 @@ const EmployeesPage = () => {
     }
   };
 
-  const filteredEmployees = employees.filter(
+  const activeEmployees = employees.filter(
     (emp) =>
-      emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.contact_number.includes(searchTerm),
+      emp.is_active &&
+      (emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.contact_number.includes(searchTerm)),
+  );
+
+  const inactiveEmployees = employees.filter(
+    (emp) =>
+      !emp.is_active &&
+      (emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.contact_number.includes(searchTerm)),
   );
 
   return (
@@ -216,17 +225,17 @@ const EmployeesPage = () => {
       </Card>
 
       {/* Employee List Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-          gap: "var(--spacing-lg)",
-        }}
-      >
-        {/* Loading Skeletons */}
-        {isLoadingEmployees && (
-          <>
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+      {/* Loading Skeletons */}
+      {isLoadingEmployees && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: "var(--spacing-lg)",
+          }}
+        >
+          {Array.from({ length: Math.min(employees.length || 6, 6) }).map(
+            (_, i) => (
               <Card key={i} padding="lg">
                 <div
                   style={{
@@ -245,94 +254,134 @@ const EmployeesPage = () => {
                 />
                 <Skeleton width="50%" height="16px" />
               </Card>
-            ))}
-          </>
-        )}
+            ),
+          )}
+        </div>
+      )}
 
-        {/* Real Data */}
-        {!isLoadingEmployees &&
-          filteredEmployees.map((employee, index) => (
-            <div
-              key={employee.employee_uid}
-              className={`animate-in delay-${(index % 3) * 100}`}
+      {!isLoadingEmployees && (
+        <>
+          {/* Active Employees Section */}
+          <div style={{ marginBottom: "var(--spacing-xl)" }}>
+            <h3
+              style={{
+                fontSize: "var(--text-lg)",
+                fontWeight: "600",
+                marginBottom: "var(--spacing-md)",
+                color: "var(--color-text)",
+              }}
             >
-              <Card
-                hoverable
-                padding="lg"
-                onClick={() => setSelectedEmployee(employee)}
-                style={{ cursor: "pointer", height: "100%" }}
+              Active Employees
+              <span
+                style={{
+                  marginLeft: "8px",
+                  fontSize: "var(--text-sm)",
+                  fontWeight: "500",
+                  color: "var(--color-text-subtle)",
+                }}
               >
+                ({activeEmployees.length})
+              </span>
+            </h3>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: "var(--spacing-lg)",
+              }}
+            >
+              {activeEmployees.map((employee, index) => (
                 <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "var(--spacing-md)",
-                  }}
+                  key={employee.employee_uid}
+                  className={`animate-in delay-${(index % 3) * 100}`}
                 >
-                  <div
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "50%",
-                      background: "linear-gradient(135deg, #e0e7ff, #c7d2fe)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "18px",
-                      fontWeight: "700",
-                      color: "var(--color-primary)",
-                    }}
-                  >
-                    {employee.name.charAt(0)}
-                  </div>
-                  <Badge variant={employee.is_active ? "success" : "neutral"}>
-                    {employee.is_active ? "Active" : "Inactive"}
-                  </Badge>
+                  <EmployeeCard
+                    employee={employee}
+                    isActive={true}
+                    onCardClick={() => setSelectedEmployee(employee)}
+                  />
                 </div>
-
-                <h3
-                  style={{
-                    fontSize: "1.1rem",
-                    fontWeight: "700",
-                    marginBottom: "8px",
-                  }}
-                >
-                  {employee.name}
-                </h3>
-
+              ))}
+              {activeEmployees.length === 0 && (
                 <div
                   style={{
-                    display: "flex",
-                    alignItems: "center",
+                    gridColumn: "1 / -1",
+                    textAlign: "center",
+                    padding: "40px",
                     color: "var(--color-text-subtle)",
-                    fontSize: "0.85rem",
                   }}
                 >
-                  <Phone size={14} style={{ marginRight: "6px" }} />
-                  <span>{employee.contact_number}</span>
+                  No active employees found.
                 </div>
-              </Card>
+              )}
             </div>
-          ))}
-
-        {!isLoadingEmployees && filteredEmployees.length === 0 && (
-          <div
-            style={{
-              gridColumn: "1 / -1",
-              textAlign: "center",
-              padding: "40px",
-              color: "var(--color-text-subtle)",
-            }}
-          >
-            No employees found.
           </div>
-        )}
-      </div>
+
+          {/* Inactive Employees Section */}
+          <div>
+            <h3
+              style={{
+                fontSize: "var(--text-lg)",
+                fontWeight: "600",
+                marginBottom: "var(--spacing-md)",
+                color: "var(--color-text)",
+              }}
+            >
+              Inactive Employees
+              <span
+                style={{
+                  marginLeft: "8px",
+                  fontSize: "var(--text-sm)",
+                  fontWeight: "500",
+                  color: "var(--color-text-subtle)",
+                }}
+              >
+                ({inactiveEmployees.length})
+              </span>
+            </h3>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: "var(--spacing-lg)",
+              }}
+            >
+              {inactiveEmployees.map((employee, index) => (
+                <div
+                  key={employee.employee_uid}
+                  className={`animate-in delay-${(index % 3) * 100}`}
+                >
+                  <EmployeeCard
+                    employee={employee}
+                    isActive={false}
+                    onCardClick={() => setSelectedEmployee(employee)}
+                  />
+                </div>
+              ))}
+              {inactiveEmployees.length === 0 && (
+                <div
+                  style={{
+                    gridColumn: "1 / -1",
+                    textAlign: "center",
+                    padding: "40px",
+                    color: "var(--color-text-subtle)",
+                  }}
+                >
+                  No inactive employees.
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Add/Edit Employee Modal */}
       <Modal
         isOpen={isAddModalOpen}
-        onClose={() => { setIsAddModalOpen(false); resetForm(); }}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          resetForm();
+        }}
         title={isEditMode ? "Edit Employee" : "Add New Employee"}
       >
         <form onSubmit={handleSaveEmployee}>
@@ -484,7 +533,10 @@ const EmployeesPage = () => {
             <Button
               type="button"
               variant="secondary"
-              onClick={() => { setIsAddModalOpen(false); resetForm(); }}
+              onClick={() => {
+                setIsAddModalOpen(false);
+                resetForm();
+              }}
             >
               Cancel
             </Button>

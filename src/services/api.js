@@ -21,6 +21,18 @@ export const clearSession = () => {
   localStorage.removeItem('nexo_session');
 };
 
+export const logout = async () => {
+  const session = getSession();
+  try {
+    if (session?.refreshToken) {
+      await api.post('/auth/logout', { refreshToken: session.refreshToken });
+    }
+  } finally {
+    clearSession();
+    window.location.href = '/login';
+  }
+};
+
 // ── Request interceptor: attach Bearer token ─────────────────────────────────
 
 api.interceptors.request.use((config) => {

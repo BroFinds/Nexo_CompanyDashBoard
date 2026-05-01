@@ -1,7 +1,7 @@
 import React from "react";
-import { Search, Bell, Menu } from "lucide-react";
+import { Search, Bell, Menu, LogOut } from "lucide-react";
 
-const Header = ({ onToggleSidebar, title, subtitle = "" }) => {
+const Header = ({ onToggleSidebar, title, subtitle = "", onLogout }) => {
   return (
     <header className="header-sticky">
       <div style={{ display: "flex", alignItems: "center" }}>
@@ -150,6 +150,27 @@ const Header = ({ onToggleSidebar, title, subtitle = "" }) => {
           }}
         >
           <Bell size={20} />
+        </button>
+
+        <button
+          onClick={onLogout}
+          title="Logout"
+          style={{
+            width: "40px",
+            height: "40px",
+            borderRadius: "50%",
+            backgroundColor: "var(--bg-surface)",
+            border: "1px solid var(--border-subtle)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            color: "var(--color-text-subtle)",
+            boxShadow: "var(--shadow-sm)",
+            transition: "all 0.2s",
+          }}
+        >
+          <LogOut size={20} />
         </button>
       </div>
     </header>

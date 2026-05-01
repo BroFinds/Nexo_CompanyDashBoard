@@ -1,6 +1,7 @@
 import React from 'react';
 import DashboardLayout from '@shared/components/layout/DashboardLayout';
 import { LayoutDashboard, Users, Package, FileBarChart } from 'lucide-react';
+import { logout } from '@/services/api';
 
 const nexoNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/', exact: true },
@@ -11,11 +12,14 @@ const nexoNavItems = [
 
 const nexoBrand = { name: 'Nexo', letter: 'N' };
 
-const NexoLayout = ({ children }) => {
+const NexoLayout = ({ children, headerTitle, headerSubtitle }) => {
   return (
     <DashboardLayout
       navItems={nexoNavItems}
       brand={nexoBrand}
+      headerTitle={headerTitle}
+      headerSubtitle={headerSubtitle}
+      onLogout={logout}
     >
       {children}
     </DashboardLayout>
