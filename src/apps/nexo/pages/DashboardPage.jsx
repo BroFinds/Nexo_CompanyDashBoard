@@ -1,55 +1,9 @@
 import React, { useState } from "react";
 import NexoLayout from "../components/NexoLayout";
 import Card from "@shared/components/ui/Card";
-import {
-  ArrowRight,
-  Truck,
-  Users,
-  Warehouse,
-  CreditCard,
-  Lock,
-  Package,
-  Info,
-} from "lucide-react";
+import { ArrowRight, Lock, Info } from "lucide-react";
 import { getSession } from "@/services/api";
-
-const ALL_APPS = [
-  {
-    id: "deliwheels",
-    title: "DeliWheels",
-    desc: "Logistics & Delivery Operations",
-    icon: Truck,
-    route: "/deliwheels",
-  },
-  {
-    id: "employee_management",
-    title: "Employee Management",
-    desc: "HR & Payroll Systems",
-    icon: Users,
-    route: "/employees",
-  },
-  {
-    id: "warehouse",
-    title: "Warehouse",
-    desc: "Inventory & Product Catalog",
-    icon: Warehouse,
-    route: "/warehouse",
-  },
-  {
-    id: "pos",
-    title: "POS Billing",
-    desc: "Retail Point of Sale",
-    icon: CreditCard,
-    route: "/pos",
-  },
-  {
-    id: "order_management",
-    title: "Order Management",
-    desc: "Sales & Order Processing",
-    icon: Package,
-    route: "/orders",
-  },
-];
+import { ALL_APPS } from "../constants/apps";
 
 const DashboardPage = () => {
   const session = getSession();

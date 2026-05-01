@@ -137,6 +137,7 @@ export const DeliwheelsProvider = ({ children }) => {
         vehicleNumber: formData.registration,
         username: formData.username || '',
         password: formData.password || '',
+        createdBy: session.userId,
       });
       const mapped = mapVehicle(data);
       setVehicles((prev) => [...prev, mapped]);
@@ -159,6 +160,7 @@ export const DeliwheelsProvider = ({ children }) => {
         vehicleNumber: formData.registration,
         username: formData.username || '',
         password: formData.password || '',
+        modifiedBy: session.userId,
       });
       const mapped = mapVehicle(data);
       setVehicles((prev) => prev.map((v) => (v.vehicle_uid === uid ? mapped : v)));
@@ -179,6 +181,7 @@ export const DeliwheelsProvider = ({ children }) => {
         routeName: formData.name,
         origin: formData.origin,
         destination: formData.destination,
+        createdBy: session.userId,
       });
       const mapped = mapRoute(data);
       setRoutes((prev) => [...prev, mapped]);
@@ -198,6 +201,7 @@ export const DeliwheelsProvider = ({ children }) => {
         routeName: formData.name,
         origin: formData.origin,
         destination: formData.destination,
+        modifiedBy: session.userId,
       });
       const mapped = mapRoute(data);
       setRoutes((prev) => prev.map((r) => (r.route_uid === uid ? mapped : r)));
@@ -218,6 +222,7 @@ export const DeliwheelsProvider = ({ children }) => {
         vehicleUId: vehicleUid,
         productUId: productUid,
         quantity,
+        createdBy: session.userId,
       });
       const mapped = mapStockAdded(data);
       setStock((prev) => [...prev, mapped]);
@@ -237,6 +242,7 @@ export const DeliwheelsProvider = ({ children }) => {
         vehicleUId: updatedEntry.vehicle_uid,
         productUId: updatedEntry.product_uid,
         quantity: updatedEntry.quantity,
+        modifiedBy: session.userId,
       });
       const mapped = mapStockAdded(data);
       setStock((prev) => prev.map((s) => (s.stock_uid === uid ? mapped : s)));
