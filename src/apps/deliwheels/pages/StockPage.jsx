@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import DeliwheelsLayout from '../components/DeliwheelsLayout';
 import Card from '@shared/components/ui/Card';
 import Badge from '@shared/components/ui/Badge';
@@ -9,10 +9,11 @@ import SearchableSelect from '@shared/components/ui/SearchableSelect';
 import { Search, Package, Plus, Truck, Filter } from 'lucide-react';
 import { useDeliwheels } from '../context/DeliwheelsContext';
 import { useGlobal } from '../../nexo/context/GlobalContext';
+import useInfiniteScroll from '@shared/hooks/useInfiniteScroll';
 
 const StockPage = () => {
-  const { stock, vehicles, isLoadingStock, isLoadingVehicles, fetchStock, fetchVehicles, addStockLoading, updateStock, deleteStock } = useDeliwheels();
-  const { products, isLoadingProducts, fetchProducts } = useGlobal();
+  const { stock, vehicles, isLoadingStock, isLoadingVehicles, stockHasMore, stockLoaded, vehiclesLoaded, fetchStock, fetchVehicles, addStockLoading, updateStock, deleteStock } = useDeliwheels();
+  const { products, isLoadingProducts, productsLoaded, fetchProducts } = useGlobal();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterVehicle, setFilterVehicle] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -23,7 +24,19 @@ const StockPage = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteError, setDeleteError] = useState('');
 
-  useEffect(() => { fetchStock(); fetchVehicles(); fetchProducts(); }, [fetchStock, fetchVehicles, fetchProducts]);
+  useEffect(() => {
+    if (!stockLoaded) fetchStock();
+    if (!vehiclesLoaded) fetchVehicles();
+    if (!productsLoaded) fetchProducts();
+  }, [stockLoaded, vehiclesLoaded, productsLoaded, fetchStock, fetchVehicles, fetchProducts]);
+
+  const scrollContainerRef = useRef(null);
+  const sentinelRef = useInfiniteScroll({
+    hasMore: stockHasMore,
+    isLoading: isLoadingStock,
+    onLoadMore: fetchStock,
+    root: scrollContainerRef,
+  });
 
   const getVehicleLabel = (vuid) => {
     const v = vehicles.find(v => v.vehicle_uid === vuid);
@@ -155,7 +168,7 @@ const StockPage = () => {
 
       {/* Stock Table */}
       <Card padding="none">
-        <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: 'calc(100vh - 340px)' }}>
+        <div ref={scrollContainerRef} style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: 'calc(100vh - 340px)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-body)' }}>
@@ -165,7 +178,7 @@ const StockPage = () => {
               </tr>
             </thead>
             <tbody>
-              {(isLoadingStock || isLoadingVehicles || isLoadingProducts) && [1,2,3,4,5].map(i => (
+              {(isLoadingStock || isLoadingVehicles || isLoadingProducts) && stock.length === 0 && [1,2,3,4,5].map(i => (
                 <tr key={i} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                   {[1,2,3,4,5,6,7].map(j => (
                     <td key={j} style={{ padding: '14px 16px' }}><Skeleton width={j === 1 ? '130px' : '70px'} height="16px" /></td>
@@ -173,7 +186,7 @@ const StockPage = () => {
                 </tr>
               ))}
 
-              {!isLoadingStock && !isLoadingVehicles && !isLoadingProducts && filteredStock.map(entry => (
+              {!((isLoadingStock || isLoadingVehicles || isLoadingProducts) && stock.length === 0) && filteredStock.map(entry => (
                 <tr key={entry.stock_uid}
                   style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background 0.15s' }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-body)'}
@@ -207,6 +220,16 @@ const StockPage = () => {
                   No stock entries found{filterVehicle !== 'all' ? ' for this vehicle' : ''}.
                 </td></tr>
               )}
+
+              {/* Infinite scroll sentinel + loading row */}
+              <tr>
+                <td colSpan={7} style={{ padding: 0, border: 'none' }}>
+                  <div ref={sentinelRef} style={{ height: '1px' }} />
+                  {isLoadingStock && stock.length > 0 && (
+                    <div style={{ textAlign: 'center', padding: '12px', color: 'var(--color-text-subtle)', fontSize: '0.85rem' }}>Loading more...</div>
+                  )}
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

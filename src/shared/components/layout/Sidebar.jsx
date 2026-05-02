@@ -1,10 +1,13 @@
 import React from 'react';
 import { User, Settings, LogOut, ArrowLeft } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { getSession } from '@/services/api';
 
 const Sidebar = ({ isOpen, onClose, navItems = [], brand = { name: 'Nexo', letter: 'N' }, backLink }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const session = getSession();
+  const displayName = session?.userName || session?.username || 'User';
 
   return (
     <aside className={`sidebar-container ${isOpen ? 'open' : ''}`}>
@@ -115,7 +118,7 @@ const Sidebar = ({ isOpen, onClose, navItems = [], brand = { name: 'Nexo', lette
                <User size={18} className="text-slate-600" />
              </div>
              <div style={{ flex: 1, minWidth: 0 }}>
-               <p style={{ fontSize: '0.85rem', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Admin User</p>
+               <p style={{ fontSize: '0.85rem', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</p>
                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-subtle)' }}>Operations</p>
              </div>
              <button

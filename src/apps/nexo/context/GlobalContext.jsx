@@ -1,5 +1,11 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
-import api, { getSession } from "@/services/api";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
+import api, { getSession, fetchPage } from "@/services/api";
 
 const GlobalContext = createContext();
 
@@ -85,49 +91,90 @@ export const GlobalProvider = ({ children }) => {
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isLoadingMeasurements, setIsLoadingMeasurements] = useState(false);
 
-  const [isEmployeesLoaded, setIsEmployeesLoaded] = useState(false);
-  const [isProductsLoaded, setIsProductsLoaded] = useState(false);
+  const [employeesHasMore, setEmployeesHasMore] = useState(true);
+  const [productsHasMore, setProductsHasMore] = useState(true);
+  const [employeesLoaded, setEmployeesLoaded] = useState(false);
+  const [productsLoaded, setProductsLoaded] = useState(false);
   const [isMeasurementsLoaded, setIsMeasurementsLoaded] = useState(false);
 
+  const employeesPageRef = useRef(0);
+  const productsPageRef = useRef(0);
+  const employeesInFlightRef = useRef(false);
+  const productsInFlightRef = useRef(false);
+  const employeesHasMoreRef = useRef(true);
+  const productsHasMoreRef = useRef(true);
+
   const fetchEmployees = useCallback(async () => {
-    if (isEmployeesLoaded) return;
+    if (employeesInFlightRef.current || !employeesHasMoreRef.current) return;
+    employeesInFlightRef.current = true;
     setIsLoadingEmployees(true);
     try {
       const session = getSession();
-      const { data } = await api.get(
+      const { items, last } = await fetchPage(
         `/api/v1/companies/${session.companyId}/employees`,
-        {
-          params: { page: 0, size: 500 },
-        },
+        { page: employeesPageRef.current },
       );
-      setEmployees((data.content || data).map(mapEmployee));
-      setIsEmployeesLoaded(true);
+      const mapped = items.map(mapEmployee);
+      setEmployees((prev) => {
+        const seen = new Set(prev.map((e) => e.employee_uid));
+        return [...prev, ...mapped.filter((e) => !seen.has(e.employee_uid))];
+      });
+      employeesPageRef.current += 1;
+      employeesHasMoreRef.current = !last;
+      setEmployeesHasMore(!last);
+      setEmployeesLoaded(true);
     } catch (e) {
       console.error("fetchEmployees:", e);
     } finally {
+      employeesInFlightRef.current = false;
       setIsLoadingEmployees(false);
     }
-  }, [isEmployeesLoaded]);
+  }, []);
+
+  const refreshEmployees = useCallback(async () => {
+    employeesPageRef.current = 0;
+    employeesHasMoreRef.current = true;
+    setEmployees([]);
+    setEmployeesHasMore(true);
+    setEmployeesLoaded(false);
+    await fetchEmployees();
+  }, [fetchEmployees]);
 
   const fetchProducts = useCallback(async () => {
-    if (isProductsLoaded) return;
+    if (productsInFlightRef.current || !productsHasMoreRef.current) return;
+    productsInFlightRef.current = true;
     setIsLoadingProducts(true);
     try {
       const session = getSession();
-      const { data } = await api.get(
+      const { items, last } = await fetchPage(
         `/api/v1/companies/${session.companyId}/products`,
-        {
-          params: { page: 0, size: 500 },
-        },
+        { page: productsPageRef.current },
       );
-      setProducts((data.content || data).map(mapProduct));
-      setIsProductsLoaded(true);
+      const mapped = items.map(mapProduct);
+      setProducts((prev) => {
+        const seen = new Set(prev.map((p) => p.product_uid));
+        return [...prev, ...mapped.filter((p) => !seen.has(p.product_uid))];
+      });
+      productsPageRef.current += 1;
+      productsHasMoreRef.current = !last;
+      setProductsHasMore(!last);
+      setProductsLoaded(true);
     } catch (e) {
       console.error("fetchProducts:", e);
     } finally {
+      productsInFlightRef.current = false;
       setIsLoadingProducts(false);
     }
-  }, [isProductsLoaded]);
+  }, []);
+
+  const refreshProducts = useCallback(async () => {
+    productsPageRef.current = 0;
+    productsHasMoreRef.current = true;
+    setProducts([]);
+    setProductsHasMore(true);
+    setProductsLoaded(false);
+    await fetchProducts();
+  }, [fetchProducts]);
 
   const fetchMeasurements = useCallback(async () => {
     if (isMeasurementsLoaded) return;
@@ -263,8 +310,14 @@ export const GlobalProvider = ({ children }) => {
         isLoadingEmployees,
         isLoadingProducts,
         isLoadingMeasurements,
+        employeesHasMore,
+        productsHasMore,
+        employeesLoaded,
+        productsLoaded,
         fetchEmployees,
         fetchProducts,
+        refreshEmployees,
+        refreshProducts,
         fetchMeasurements,
         addEmployee,
         updateEmployee,

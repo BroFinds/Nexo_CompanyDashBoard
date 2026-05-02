@@ -1,7 +1,10 @@
 import React from "react";
 import { Search, Bell, Menu, LogOut } from "lucide-react";
+import { getSession } from "@/services/api";
 
 const Header = ({ onToggleSidebar, title, subtitle = "", onLogout }) => {
+  const session = getSession();
+  const displayName = session?.userName || session?.username || "User";
   return (
     <header className="header-sticky">
       <div style={{ display: "flex", alignItems: "center" }}>
@@ -52,7 +55,7 @@ const Header = ({ onToggleSidebar, title, subtitle = "", onLogout }) => {
                 lineHeight: 1.2,
               }}
             >
-              Hi, Admin
+              Hi, {displayName}
             </h1>
             <p
               style={{
