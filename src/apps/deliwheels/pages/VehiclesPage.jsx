@@ -9,6 +9,7 @@ import { Search, Truck, Plus, Fuel, Weight } from 'lucide-react';
 import { useDeliwheels } from '../context/DeliwheelsContext';
 import { useGlobal } from '../../nexo/context/GlobalContext';
 import useInfiniteScroll from '@shared/hooks/useInfiniteScroll';
+import InfiniteScrollLoader from '@shared/components/ui/InfiniteScrollLoader';
 
 const EMPTY_VEHICLE = { registration: '', type: 'Mini Truck', model: '', capacity: '', fuel: 'Diesel', status: 'active', driver: 'Unassigned', employee_uid: '', last_service: '', route_uid: '', username: '', password: '' };
 
@@ -174,7 +175,7 @@ const VehiclesPage = () => {
       {/* Infinite scroll sentinel + loading indicator */}
       <div ref={sentinelRef} style={{ height: '1px' }} />
       {isLoadingVehicles && vehicles.length > 0 && (
-        <div style={{ textAlign: 'center', padding: '16px', color: 'var(--color-text-subtle)', fontSize: '0.85rem' }}>Loading more...</div>
+        <InfiniteScrollLoader />
       )}
 
       {/* Detail Modal */}

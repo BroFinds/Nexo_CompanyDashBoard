@@ -10,6 +10,7 @@ import Skeleton from "@shared/components/ui/Skeleton";
 import { Plus, Search, Phone } from "lucide-react";
 import { useGlobal } from "../context/GlobalContext";
 import useInfiniteScroll from "@shared/hooks/useInfiniteScroll";
+import InfiniteScrollLoader from "@shared/components/ui/InfiniteScrollLoader";
 
 const EmployeesPage = () => {
   const {
@@ -385,16 +386,7 @@ const EmployeesPage = () => {
           {/* Infinite scroll sentinel + loading indicator */}
           <div ref={sentinelRef} style={{ height: "1px" }} />
           {isLoadingEmployees && employees.length > 0 && (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "16px",
-                color: "var(--color-text-subtle)",
-                fontSize: "0.85rem",
-              }}
-            >
-              Loading more...
-            </div>
+            <InfiniteScrollLoader />
           )}
         </>
       )}
