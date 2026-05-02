@@ -8,6 +8,7 @@ import { ALL_APPS } from "../constants/apps";
 const DashboardPage = () => {
   const session = getSession();
   const enabledApps = session?.apps ?? [];
+  const companyName = session?.companyName || "company";
   const [tooltipApp, setTooltipApp] = useState(null);
 
   const apps = ALL_APPS.map((app) => {
@@ -23,7 +24,7 @@ const DashboardPage = () => {
   return (
     <NexoLayout
       headerTitle="Dashboard"
-      headerSubtitle="Overview of company operations"
+      headerSubtitle={`Overview of ${companyName} operations`}
     >
       <div className="dashboard-grid">
         {apps.map((app, index) => {

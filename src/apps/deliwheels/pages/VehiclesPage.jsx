@@ -8,12 +8,13 @@ import Modal from '@shared/components/ui/Modal';
 import { Search, Truck, Plus, Fuel, Weight } from 'lucide-react';
 import { useDeliwheels } from '../context/DeliwheelsContext';
 import { useGlobal } from '../../nexo/context/GlobalContext';
+import useInfiniteScroll from '@shared/hooks/useInfiniteScroll';
 
 const EMPTY_VEHICLE = { registration: '', type: 'Mini Truck', model: '', capacity: '', fuel: 'Diesel', status: 'active', driver: 'Unassigned', employee_uid: '', last_service: '', route_uid: '', username: '', password: '' };
 
 const VehiclesPage = () => {
-  const { vehicles, routes, isLoadingVehicles, fetchVehicles, fetchRoutes, addVehicle, updateVehicle, deleteVehicle } = useDeliwheels();
-  const { employees, fetchEmployees } = useGlobal();
+  const { vehicles, routes, isLoadingVehicles, vehiclesHasMore, vehiclesLoaded, routesLoaded, fetchVehicles, fetchRoutes, addVehicle, updateVehicle, deleteVehicle } = useDeliwheels();
+  const { employees, employeesLoaded, fetchEmployees } = useGlobal();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -23,7 +24,17 @@ const VehiclesPage = () => {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
-  useEffect(() => { fetchVehicles(); fetchRoutes(); fetchEmployees(); }, [fetchVehicles, fetchRoutes, fetchEmployees]);
+  useEffect(() => {
+    if (!vehiclesLoaded) fetchVehicles();
+    if (!routesLoaded) fetchRoutes();
+    if (!employeesLoaded) fetchEmployees();
+  }, [vehiclesLoaded, routesLoaded, employeesLoaded, fetchVehicles, fetchRoutes, fetchEmployees]);
+
+  const sentinelRef = useInfiniteScroll({
+    hasMore: vehiclesHasMore,
+    isLoading: isLoadingVehicles,
+    onLoadMore: fetchVehicles,
+  });
 
   const getRouteLabel = (ruid) => {
     const r = routes.find(r => r.route_uid === ruid);
@@ -129,11 +140,11 @@ const VehiclesPage = () => {
       </Card>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 'var(--spacing-lg)' }}>
-        {isLoadingVehicles && [1,2,3,4].map(i => (
+        {isLoadingVehicles && vehicles.length === 0 && [1,2,3,4].map(i => (
           <Card key={i} padding="lg"><Skeleton width="80%" height="20px" style={{ marginBottom: '12px' }} /><Skeleton width="100%" height="40px" style={{ marginBottom: '12px' }} /><Skeleton width="50%" height="16px" /></Card>
         ))}
 
-        {!isLoadingVehicles && filteredVehicles.map((v, i) => (
+        {!(isLoadingVehicles && vehicles.length === 0) && filteredVehicles.map((v, i) => (
           <div key={v.vehicle_uid} className={`animate-in delay-${(i % 3) * 100}`}>
             <Card hoverable padding="lg" onClick={() => setSelectedVehicle(v)} style={{ cursor: 'pointer', height: '100%' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--spacing-md)' }}>
@@ -155,10 +166,16 @@ const VehiclesPage = () => {
             </Card>
           </div>
         ))}
-        {!isLoadingVehicles && filteredVehicles.length === 0 && (
+        {!(isLoadingVehicles && vehicles.length === 0) && filteredVehicles.length === 0 && (
           <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--color-text-subtle)' }}>No vehicles found.</div>
         )}
       </div>
+
+      {/* Infinite scroll sentinel + loading indicator */}
+      <div ref={sentinelRef} style={{ height: '1px' }} />
+      {isLoadingVehicles && vehicles.length > 0 && (
+        <div style={{ textAlign: 'center', padding: '16px', color: 'var(--color-text-subtle)', fontSize: '0.85rem' }}>Loading more...</div>
+      )}
 
       {/* Detail Modal */}
       <Modal isOpen={!!selectedVehicle} onClose={() => { setSelectedVehicle(null); setConfirmingDelete(false); setDeleteError(''); }} title="Vehicle Details">

@@ -9,11 +9,14 @@ import Modal from "@shared/components/ui/Modal";
 import Skeleton from "@shared/components/ui/Skeleton";
 import { Plus, Search, Phone } from "lucide-react";
 import { useGlobal } from "../context/GlobalContext";
+import useInfiniteScroll from "@shared/hooks/useInfiniteScroll";
 
 const EmployeesPage = () => {
   const {
     employees,
     isLoadingEmployees,
+    employeesHasMore,
+    employeesLoaded,
     fetchEmployees,
     addEmployee,
     updateEmployee,
@@ -28,10 +31,16 @@ const EmployeesPage = () => {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
-  // Fetch Data on Load
+  // Fetch first page on load (only if not already loaded — context persists across navigation)
   useEffect(() => {
-    fetchEmployees();
-  }, [fetchEmployees]);
+    if (!employeesLoaded) fetchEmployees();
+  }, [employeesLoaded, fetchEmployees]);
+
+  const sentinelRef = useInfiniteScroll({
+    hasMore: employeesHasMore,
+    isLoading: isLoadingEmployees,
+    onLoadMore: fetchEmployees,
+  });
 
   // Form State
   const [formData, setFormData] = useState({
@@ -225,8 +234,8 @@ const EmployeesPage = () => {
       </Card>
 
       {/* Employee List Grid */}
-      {/* Loading Skeletons */}
-      {isLoadingEmployees && (
+      {/* Loading Skeletons (only on initial load) */}
+      {isLoadingEmployees && employees.length === 0 && (
         <div
           style={{
             display: "grid",
@@ -259,7 +268,7 @@ const EmployeesPage = () => {
         </div>
       )}
 
-      {!isLoadingEmployees && (
+      {!(isLoadingEmployees && employees.length === 0) && (
         <>
           {/* Active Employees Section */}
           <div style={{ marginBottom: "var(--spacing-xl)" }}>
@@ -372,6 +381,21 @@ const EmployeesPage = () => {
               )}
             </div>
           </div>
+
+          {/* Infinite scroll sentinel + loading indicator */}
+          <div ref={sentinelRef} style={{ height: "1px" }} />
+          {isLoadingEmployees && employees.length > 0 && (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "16px",
+                color: "var(--color-text-subtle)",
+                fontSize: "0.85rem",
+              }}
+            >
+              Loading more...
+            </div>
+          )}
         </>
       )}
 
