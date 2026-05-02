@@ -8,6 +8,7 @@ import Modal from "@shared/components/ui/Modal";
 import { Search, MapPin, Clock, Navigation, Plus } from "lucide-react";
 import { useDeliwheels } from "../context/DeliwheelsContext";
 import useInfiniteScroll from "@shared/hooks/useInfiniteScroll";
+import InfiniteScrollLoader from "@shared/components/ui/InfiniteScrollLoader";
 
 const EMPTY_ROUTE = {
   name: "",
@@ -392,16 +393,7 @@ const RoutesPage = () => {
         <>
           <div ref={sentinelRef} style={{ height: "1px" }} />
           {isLoadingRoutes && routes.length > 0 && (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "16px",
-                color: "var(--color-text-subtle)",
-                fontSize: "0.85rem",
-              }}
-            >
-              Loading more...
-            </div>
+            <InfiniteScrollLoader />
           )}
         </>
       )}

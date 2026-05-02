@@ -10,6 +10,9 @@ import Skeleton from "@shared/components/ui/Skeleton";
 import { Plus, Search, Package, FileText, Scale } from "lucide-react";
 import { useGlobal } from "../context/GlobalContext";
 import useInfiniteScroll from "@shared/hooks/useInfiniteScroll";
+import useFreshItems from "@shared/hooks/useFreshItems";
+import useStickyFlag from "@shared/hooks/useStickyFlag";
+import InfiniteScrollLoader from "@shared/components/ui/InfiniteScrollLoader";
 
 const ProductsPage = () => {
   const {
@@ -44,6 +47,12 @@ const ProductsPage = () => {
     isLoading: isLoadingProducts,
     onLoadMore: fetchProducts,
   });
+
+  const isFreshProduct = useFreshItems(products.map((p) => p.product_uid));
+  const showLoader = useStickyFlag(
+    isLoadingProducts && products.length > 0,
+    700,
+  );
 
   // Measurement search state
   const [measurementSearch, setMeasurementSearch] = useState("");
@@ -381,18 +390,25 @@ const ProductsPage = () => {
                   gap: "var(--spacing-lg)",
                 }}
               >
-                {section.list.map((product, index) => (
-                  <div
-                    key={product.product_uid}
-                    className={`animate-in delay-${(index % 3) * 100}`}
-                  >
-                    <ProductCard
-                      product={product}
-                      isActive={product.is_active}
-                      onCardClick={() => setSelectedProduct(product)}
-                    />
-                  </div>
-                ))}
+                {(() => {
+                  let freshIdx = 0;
+                  return section.list.map((product, index) => {
+                    const fresh = isFreshProduct(product.product_uid);
+                    const localFreshIdx = fresh ? freshIdx++ : 0;
+                    const className = fresh
+                      ? `animate-fresh delay-${(localFreshIdx % 4) * 100}`
+                      : `animate-in delay-${(index % 3) * 100}`;
+                    return (
+                      <div key={product.product_uid} className={className}>
+                        <ProductCard
+                          product={product}
+                          isActive={product.is_active}
+                          onCardClick={() => setSelectedProduct(product)}
+                        />
+                      </div>
+                    );
+                  });
+                })()}
                 {section.list.length === 0 && (
                   <div
                     style={{
@@ -411,18 +427,7 @@ const ProductsPage = () => {
 
           {/* Infinite scroll sentinel + loading indicator */}
           <div ref={sentinelRef} style={{ height: "1px" }} />
-          {isLoadingProducts && products.length > 0 && (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "16px",
-                color: "var(--color-text-subtle)",
-                fontSize: "0.85rem",
-              }}
-            >
-              Loading more...
-            </div>
-          )}
+          {showLoader && <InfiniteScrollLoader />}
         </>
       )}
 

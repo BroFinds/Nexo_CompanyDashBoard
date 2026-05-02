@@ -10,6 +10,7 @@ import { Search, Package, Plus, Truck, Filter } from 'lucide-react';
 import { useDeliwheels } from '../context/DeliwheelsContext';
 import { useGlobal } from '../../nexo/context/GlobalContext';
 import useInfiniteScroll from '@shared/hooks/useInfiniteScroll';
+import InfiniteScrollLoader from '@shared/components/ui/InfiniteScrollLoader';
 
 const StockPage = () => {
   const { stock, vehicles, isLoadingStock, isLoadingVehicles, stockHasMore, stockLoaded, vehiclesLoaded, fetchStock, fetchVehicles, addStockLoading, updateStock, deleteStock } = useDeliwheels();
@@ -226,7 +227,7 @@ const StockPage = () => {
                 <td colSpan={7} style={{ padding: 0, border: 'none' }}>
                   <div ref={sentinelRef} style={{ height: '1px' }} />
                   {isLoadingStock && stock.length > 0 && (
-                    <div style={{ textAlign: 'center', padding: '12px', color: 'var(--color-text-subtle)', fontSize: '0.85rem' }}>Loading more...</div>
+                    <InfiniteScrollLoader style={{ padding: '12px' }} />
                   )}
                 </td>
               </tr>

@@ -41,6 +41,20 @@ input {
     animation-delay: 0.3s;
 }
 
+/* Fresh-batch entrance for items appended via infinite scroll.
+   More pronounced than .animate-in so users notice newly loaded items. */
+.animate-fresh {
+    animation: slideUpFadeStrong 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+}
+
+@keyframes slideUpFadeStrong {
+    0%   { opacity: 0; transform: translateY(40px) scale(0.96); }
+    60%  { opacity: 1; }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 @keyframes shimmer {
     0% {
         background-position: 200% 0;
@@ -60,6 +74,40 @@ input {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Infinite-scroll loader */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulseFade {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+}
+
+.infinite-loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px;
+    color: var(--color-text-subtle);
+    font-size: 0.85rem;
+    animation: slideUpFade 0.35s ease-out both;
+}
+
+.infinite-loader__spinner {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border-subtle);
+    border-top-color: var(--color-primary, #f97316);
+    animation: spin 0.7s linear infinite;
+}
+
+.infinite-loader__label {
+    animation: pulseFade 1.4s ease-in-out infinite;
 }
 
 /* Scrollbar Polish */
