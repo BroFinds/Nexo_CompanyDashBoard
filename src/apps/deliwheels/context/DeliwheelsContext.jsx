@@ -11,39 +11,45 @@ const DeliwheelsContext = createContext();
 
 // ── Field mappers (API camelCase → UI snake_case) ────────────────────────────
 
-const mapVehicle = (v) => ({
-  vehicle_uid: v.vehicleUId || v.vehicle_uid,
-  registration:
-    v.vehicleNumber || v.vehicleRegistration || v.registration || "",
-  model: v.vehicleName || v.model || "",
-  type: v.vehicleType || v.type || "Mini Truck",
-  capacity: v.capacity || "",
-  fuel: v.fuelType || v.fuel || "Diesel",
-  status:
-    v.isActive !== undefined
-      ? v.isActive
-        ? "active"
-        : "inactive"
-      : v.status || "active",
-  driver: v.driverName || v.driver || "Unassigned",
-  employee_uid: v.employeeUId || v.employee_uid || "",
-  last_service: v.lastService || v.last_service || "",
-  route_uid: v.routeUId || v.route_uid || "",
-  username: v.username || "",
-});
-
 const mapRoute = (r) => {
+  if (!r) return null;
   const activeFlag = r.isActive !== undefined ? r.isActive : r.active;
   return {
-    route_uid: r.routeUid || r.route_uid,
-    origin: r.fromPlace || "",
-    destination: r.toPlace || "",
+    route_uid: r.routeUid || r.route_uid || "",
+    origin: r.fromPlace || r.origin || "",
+    destination: r.toPlace || r.destination || "",
     status:
       activeFlag !== undefined
         ? activeFlag
           ? "active"
           : "inactive"
         : r.status || "active",
+  };
+};
+
+const mapVehicle = (v) => {
+  const nestedRoute = mapRoute(v.route);
+  const driverFromObj = v.employee?.name;
+  return {
+    vehicle_uid: v.vehicleUid || v.vehicle_uid || "",
+    registration: v.vehicleNumber || v.vehicle_number || "",
+    model: v.vehicleName || v.vehicle_name || "",
+    status:
+      v.isActive !== undefined
+        ? v.isActive
+          ? "active"
+          : "inactive"
+        : v.is_active !== undefined
+          ? v.is_active
+            ? "active"
+            : "inactive"
+          : v.status || "active",
+    driver: v.employeeName || driverFromObj || "Unassigned",
+    employee_uid: v.employeeUid || v.employee_uid || "",
+    route_uid: v.routeUid || v.route_uid || nestedRoute?.route_uid || "",
+    route_origin: nestedRoute?.origin || "",
+    route_destination: nestedRoute?.destination || "",
+    username: v.username || "",
   };
 };
 
@@ -223,7 +229,7 @@ export const DeliwheelsProvider = ({ children }) => {
   const addVehicle = useCallback(async (formData) => {
     const session = getSession();
     try {
-      const { data } = await api.put("/api/v1/deliwheels/vehicles", {
+      const { data } = await api.post("/api/v1/deliwheels/vehicles", {
         companyUid: session.companyId,
         routeUid: formData.route_uid || null,
         employeeUid: formData.employee_uid || null,
@@ -234,7 +240,7 @@ export const DeliwheelsProvider = ({ children }) => {
         createdBy: session.userId,
       });
       const mapped = mapVehicle(data);
-      setVehicles((prev) => [...prev, mapped]);
+      setVehicles((prev) => [mapped, ...prev]);
       return mapped;
     } catch (e) {
       console.error("addVehicle:", e);
@@ -245,22 +251,37 @@ export const DeliwheelsProvider = ({ children }) => {
   const updateVehicle = useCallback(async (formData) => {
     const session = getSession();
     const uid = formData.vehicle_uid;
+    const payload = {
+      companyUid: session.companyId,
+      routeUid: formData.route_uid || null,
+      employeeUid: formData.employee_uid || null,
+      vehicleName: formData.model,
+      vehicleNumber: formData.registration,
+      modifiedBy: session.userId,
+    };
+    if (formData.username) payload.username = formData.username;
+    if (formData.password) payload.password = formData.password;
     try {
-      const { data } = await api.put(`/api/v1/deliwheels/vehicles/${uid}`, {
-        companyUid: session.companyId,
-        routeUid: formData.route_uid || null,
-        employeeUid: formData.employee_uid || null,
-        vehicleName: formData.model,
-        vehicleNumber: formData.registration,
-        username: formData.username || "",
-        password: formData.password || "",
-        modifiedBy: session.userId,
-      });
-      const mapped = mapVehicle(data);
-      setVehicles((prev) =>
-        prev.map((v) => (v.vehicle_uid === uid ? mapped : v)),
+      const { data } = await api.put(
+        `/api/v1/deliwheels/vehicles/${uid}`,
+        payload,
       );
-      return mapped;
+      const mapped = mapVehicle(data);
+      // PUT response may omit the joined employee/route objects that GET returns,
+      // so trust the form's selections for the relational fields and clear stale
+      // cached labels — getDriverName/getRouteLabel will resolve fresh names.
+      const merged = {
+        ...mapped,
+        employee_uid: formData.employee_uid || "",
+        route_uid: formData.route_uid || "",
+        driver: formData.driver || "Unassigned",
+        route_origin: mapped.route_origin || "",
+        route_destination: mapped.route_destination || "",
+      };
+      setVehicles((prev) =>
+        prev.map((v) => (v.vehicle_uid === uid ? merged : v)),
+      );
+      return merged;
     } catch (e) {
       console.error("updateVehicle:", e);
       throw e;
@@ -367,10 +388,30 @@ export const DeliwheelsProvider = ({ children }) => {
 
   const deleteVehicle = useCallback(async (uid) => {
     try {
-      await api.delete(`/api/v1/deliwheels/vehicles/${uid}`);
-      setVehicles((prev) => prev.filter((v) => v.vehicle_uid !== uid));
+      await api.patch(`/api/v1/deliwheels/vehicles/${uid}/status/false`);
+      setVehicles((prev) =>
+        prev.map((v) =>
+          v.vehicle_uid === uid ? { ...v, status: "inactive" } : v,
+        ),
+      );
     } catch (e) {
       console.error("deleteVehicle:", e);
+      throw e;
+    }
+  }, []);
+
+  const setVehicleStatus = useCallback(async (uid, active) => {
+    try {
+      await api.patch(`/api/v1/deliwheels/vehicles/${uid}/status/${active}`);
+      setVehicles((prev) =>
+        prev.map((v) =>
+          v.vehicle_uid === uid
+            ? { ...v, status: active ? "active" : "inactive" }
+            : v,
+        ),
+      );
+    } catch (e) {
+      console.error("setVehicleStatus:", e);
       throw e;
     }
   }, []);
@@ -433,6 +474,7 @@ export const DeliwheelsProvider = ({ children }) => {
         deleteRoute,
         deleteStock,
         setRouteStatus,
+        setVehicleStatus,
       }}
     >
       {children}
