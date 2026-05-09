@@ -81,7 +81,9 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '500px' }) => {
         {/* Modal Body */}
         <div style={{
           padding: 'var(--spacing-lg)',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          minWidth: 0
         }}>
           {children}
         </div>
