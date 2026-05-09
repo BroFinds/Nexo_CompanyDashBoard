@@ -4,10 +4,49 @@ import React, {
   useState,
   useCallback,
   useRef,
+  useEffect,
 } from "react";
 import api, { getSession, fetchPage } from "@/services/api";
 
 const GlobalContext = createContext();
+
+// ── Products cache (localStorage, scoped per company) ────────────────────────
+// Products change rarely, so we download them once and serve every consumer
+// from cache. The cache is invalidated on logout (api.js → clearSession) and
+// rewritten whenever products mutate locally (add/update/disable/refresh).
+
+const PRODUCTS_CACHE_KEY = "nexo_products_cache";
+
+const readProductsCache = () => {
+  try {
+    const session = getSession();
+    if (!session?.companyId) return null;
+    const raw = localStorage.getItem(PRODUCTS_CACHE_KEY);
+    if (!raw) return null;
+    const cache = JSON.parse(raw);
+    if (cache?.companyId !== session.companyId) return null;
+    return Array.isArray(cache.products) ? cache.products : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeProductsCache = (products) => {
+  try {
+    const session = getSession();
+    if (!session?.companyId) return;
+    localStorage.setItem(
+      PRODUCTS_CACHE_KEY,
+      JSON.stringify({
+        companyId: session.companyId,
+        products,
+        cachedAt: Date.now(),
+      }),
+    );
+  } catch (e) {
+    console.error("writeProductsCache:", e);
+  }
+};
 
 // ── Field mappers (API camelCase → UI snake_case) ────────────────────────────
 
@@ -84,7 +123,7 @@ const buildProductBody = (formData, companyId, userId) => ({
 
 export const GlobalProvider = ({ children }) => {
   const [employees, setEmployees] = useState([]);
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(() => readProductsCache() || []);
   const [measurements, setMeasurements] = useState([]);
 
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
@@ -92,9 +131,13 @@ export const GlobalProvider = ({ children }) => {
   const [isLoadingMeasurements, setIsLoadingMeasurements] = useState(false);
 
   const [employeesHasMore, setEmployeesHasMore] = useState(true);
-  const [productsHasMore, setProductsHasMore] = useState(true);
+  const [productsHasMore, setProductsHasMore] = useState(
+    () => !readProductsCache(),
+  );
   const [employeesLoaded, setEmployeesLoaded] = useState(false);
-  const [productsLoaded, setProductsLoaded] = useState(false);
+  const [productsLoaded, setProductsLoaded] = useState(
+    () => !!readProductsCache(),
+  );
   const [isMeasurementsLoaded, setIsMeasurementsLoaded] = useState(false);
 
   const employeesPageRef = useRef(0);
@@ -102,7 +145,17 @@ export const GlobalProvider = ({ children }) => {
   const employeesInFlightRef = useRef(false);
   const productsInFlightRef = useRef(false);
   const employeesHasMoreRef = useRef(true);
-  const productsHasMoreRef = useRef(true);
+  const productsHasMoreRef = useRef(!readProductsCache());
+  const productFetchesRef = useRef(new Map()); // uid -> Promise
+
+  // Persist the product list to localStorage once the full list is loaded and
+  // again on every subsequent mutation. While paginating, productsHasMore is
+  // still true, so partial pages don't get cached.
+  useEffect(() => {
+    if (productsLoaded && !productsHasMore) {
+      writeProductsCache(products);
+    }
+  }, [products, productsLoaded, productsHasMore]);
 
   const fetchEmployees = useCallback(async () => {
     if (employeesInFlightRef.current || !employeesHasMoreRef.current) return;
@@ -165,6 +218,41 @@ export const GlobalProvider = ({ children }) => {
       productsInFlightRef.current = false;
       setIsLoadingProducts(false);
     }
+  }, []);
+
+  const fetchAllProducts = useCallback(async () => {
+    while (productsHasMoreRef.current) {
+      const before = productsPageRef.current;
+      await fetchProducts();
+      if (productsPageRef.current === before) break;
+    }
+  }, [fetchProducts]);
+
+  const ensureProduct = useCallback(async (uid) => {
+    if (!uid) return null;
+    if (productFetchesRef.current.has(uid)) {
+      return productFetchesRef.current.get(uid);
+    }
+    const promise = (async () => {
+      try {
+        const session = getSession();
+        const { data } = await api.get(
+          `/api/v1/companies/${session.companyId}/products/${uid}`,
+        );
+        const mapped = mapProduct(data);
+        setProducts((prev) => {
+          if (prev.some((p) => p.product_uid === mapped.product_uid)) return prev;
+          return [...prev, mapped];
+        });
+        return mapped;
+      } catch (e) {
+        console.error("ensureProduct:", e);
+        productFetchesRef.current.delete(uid);
+        return null;
+      }
+    })();
+    productFetchesRef.current.set(uid, promise);
+    return promise;
   }, []);
 
   const refreshProducts = useCallback(async () => {
@@ -316,6 +404,8 @@ export const GlobalProvider = ({ children }) => {
         productsLoaded,
         fetchEmployees,
         fetchProducts,
+        fetchAllProducts,
+        ensureProduct,
         refreshEmployees,
         refreshProducts,
         fetchMeasurements,

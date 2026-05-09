@@ -9,6 +9,11 @@ import api, { getSession, fetchPage } from "@/services/api";
 
 const DeliwheelsContext = createContext();
 
+// Spring's LocalDateTime deserializer rejects the trailing "Z" that
+// Date.toISOString() produces. Emit "yyyy-MM-ddTHH:mm:ss.SSS" instead.
+const toLocalDateTime = (d = new Date()) =>
+  new Date(d).toISOString().replace(/Z$/, "");
+
 // ── Field mappers (API camelCase → UI snake_case) ────────────────────────────
 
 const mapRoute = (r) => {
@@ -54,19 +59,16 @@ const mapVehicle = (v) => {
 };
 
 const mapStockAdded = (s) => ({
-  stock_uid: s.stockAddedUId || s.stockUId || s.stock_uid || "",
-  product_uid: s.productUId || s.product_uid || "",
+  stock_uid: s.stockUid || s.stock_uid || "",
+  product_uid: s.productUid || s.product_uid || "",
   product_name: s.productName || s.product_name || "",
-  product_code: s.productCode || s.product_code || "",
-  quantity: s.quantity || 0,
-  vehicle_uid: s.vehicleUId || s.vehicle_uid || "",
-  loaded_date: (s.stockDate || s.loadedDate || s.createdOn || "").split("T")[0],
-  status:
-    s.isActive !== undefined
-      ? s.isActive
-        ? "loaded"
-        : "delivered"
-      : s.status || "loaded",
+  vehicle_uid: s.vehicleUid || s.vehicle_uid || "",
+  vehicle_number: s.vehicleNumber || s.vehicle_number || "",
+  company_uid: s.companyUid || s.company_uid || "",
+  quantity: parseInt(s.totalQuantity ?? s.total_quantity ?? s.quantity ?? 0, 10) || 0,
+  loaded_date: (s.stockAddedDate || s.stock_added_date || s.createdAt || "").split("T")[0],
+  created_at: s.createdAt || "",
+  updated_at: s.updatedAt || "",
 });
 
 // ── Provider ─────────────────────────────────────────────────────────────────
@@ -99,6 +101,8 @@ export const DeliwheelsProvider = ({ children }) => {
   const vehiclesHasMoreRef = useRef(true);
   const routesHasMoreRef = useRef(true);
   const stockHasMoreRef = useRef(true);
+  const stockFiltersRef = useRef({}); // { vehicleUid?, productUid?, fromDate?, toDate? }
+  const vehicleFetchesRef = useRef(new Map()); // uid -> Promise
 
   // ── Fetchers (paginated, append on each call) ──────────────────────────────
 
@@ -127,6 +131,30 @@ export const DeliwheelsProvider = ({ children }) => {
       vehiclesInFlightRef.current = false;
       setIsLoadingVehicles(false);
     }
+  }, []);
+
+  const ensureVehicle = useCallback(async (uid) => {
+    if (!uid) return null;
+    if (vehicleFetchesRef.current.has(uid)) {
+      return vehicleFetchesRef.current.get(uid);
+    }
+    const promise = (async () => {
+      try {
+        const { data } = await api.get(`/api/v1/deliwheels/vehicles/${uid}`);
+        const mapped = mapVehicle(data);
+        setVehicles((prev) => {
+          if (prev.some((v) => v.vehicle_uid === mapped.vehicle_uid)) return prev;
+          return [...prev, mapped];
+        });
+        return mapped;
+      } catch (e) {
+        console.error("ensureVehicle:", e);
+        vehicleFetchesRef.current.delete(uid);
+        return null;
+      }
+    })();
+    vehicleFetchesRef.current.set(uid, promise);
+    return promise;
   }, []);
 
   const refreshVehicles = useCallback(async () => {
@@ -180,9 +208,15 @@ export const DeliwheelsProvider = ({ children }) => {
     setIsLoadingStock(true);
     try {
       const session = getSession();
+      const f = stockFiltersRef.current;
+      const params = {};
+      if (f.vehicleUid) params.vehicleUid = f.vehicleUid;
+      if (f.productUid) params.productUid = f.productUid;
+      if (f.fromDate) params.fromDate = f.fromDate;
+      if (f.toDate) params.toDate = f.toDate;
       const { items, last } = await fetchPage(
         `/api/v1/deliwheels/stock-added/company/${session.companyId}`,
-        { page: stockPageRef.current },
+        { page: stockPageRef.current, params },
       );
       const mapped = items.map(mapStockAdded);
       setStock((prev) => {
@@ -200,6 +234,19 @@ export const DeliwheelsProvider = ({ children }) => {
       setIsLoadingStock(false);
     }
   }, []);
+
+  const searchStock = useCallback(
+    async (filters = {}) => {
+      stockFiltersRef.current = filters;
+      stockPageRef.current = 0;
+      stockHasMoreRef.current = true;
+      setStock([]);
+      setStockHasMore(true);
+      setStockLoaded(false);
+      await fetchStock();
+    },
+    [fetchStock],
+  );
 
   const refreshStock = useCallback(async () => {
     stockPageRef.current = 0;
@@ -348,15 +395,16 @@ export const DeliwheelsProvider = ({ children }) => {
     async (productUid, quantity, vehicleUid) => {
       const session = getSession();
       try {
-        const { data } = await api.put("/api/v1/deliwheels/stock-added", {
-          companyUId: session.companyId,
-          vehicleUId: vehicleUid,
-          productUId: productUid,
-          quantity,
+        const { data } = await api.post("/api/v1/deliwheels/stock-added", {
+          companyUid: session.companyId,
+          vehicleUid,
+          productUid,
+          totalQuantity: String(quantity),
+          stockAddedDate: toLocalDateTime(),
           createdBy: session.userId,
         });
         const mapped = mapStockAdded(data);
-        setStock((prev) => [...prev, mapped]);
+        setStock((prev) => [mapped, ...prev]);
         return mapped;
       } catch (e) {
         console.error("addStockLoading:", e);
@@ -371,10 +419,11 @@ export const DeliwheelsProvider = ({ children }) => {
     const uid = updatedEntry.stock_uid;
     try {
       const { data } = await api.put(`/api/v1/deliwheels/stock-added/${uid}`, {
-        companyUId: session.companyId,
-        vehicleUId: updatedEntry.vehicle_uid,
-        productUId: updatedEntry.product_uid,
-        quantity: updatedEntry.quantity,
+        companyUid: session.companyId,
+        vehicleUid: updatedEntry.vehicle_uid,
+        productUid: updatedEntry.product_uid,
+        totalQuantity: String(updatedEntry.quantity),
+        stockAddedDate: toLocalDateTime(updatedEntry.loaded_date || undefined),
         modifiedBy: session.userId,
       });
       const mapped = mapStockAdded(data);
@@ -430,16 +479,6 @@ export const DeliwheelsProvider = ({ children }) => {
     }
   }, []);
 
-  const deleteStock = useCallback(async (uid) => {
-    try {
-      await api.delete(`/api/v1/deliwheels/stock-added/${uid}`);
-      setStock((prev) => prev.filter((s) => s.stock_uid !== uid));
-    } catch (e) {
-      console.error("deleteStock:", e);
-      throw e;
-    }
-  }, []);
-
   return (
     <DeliwheelsContext.Provider
       value={{
@@ -459,8 +498,10 @@ export const DeliwheelsProvider = ({ children }) => {
         routesLoaded,
         fetchVehicles,
         fetchStock,
+        searchStock,
         fetchRoutes,
         fetchSales,
+        ensureVehicle,
         refreshVehicles,
         refreshRoutes,
         refreshStock,
@@ -472,7 +513,6 @@ export const DeliwheelsProvider = ({ children }) => {
         updateStock,
         deleteVehicle,
         deleteRoute,
-        deleteStock,
         setRouteStatus,
         setVehicleStatus,
       }}
