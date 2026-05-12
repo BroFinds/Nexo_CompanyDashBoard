@@ -1,6 +1,7 @@
 import React from 'react';
 import DashboardLayout from '@shared/components/layout/DashboardLayout';
 import { LayoutDashboard, Truck, Route, Warehouse, FileBarChart, ShoppingCart } from 'lucide-react';
+import { logout } from '@/services/api';
 
 const dwNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/deliwheels', exact: true },
@@ -19,6 +20,7 @@ const DeliwheelsLayout = ({ children }) => {
       navItems={dwNavItems}
       brand={dwBrand}
       backLink={{ label: 'Back to Nexo', path: '/' }}
+      onLogout={logout}
     >
       {children}
     </DashboardLayout>

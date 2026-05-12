@@ -24,6 +24,7 @@ export const setSession = (data) => {
 export const clearSession = () => {
   localStorage.removeItem("nexo_session");
   localStorage.removeItem("nexo_products_cache");
+  localStorage.removeItem("nexo_vehicles_cache");
 };
 
 export const pingService = async (serviceName) => {
