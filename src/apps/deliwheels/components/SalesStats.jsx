@@ -1,6 +1,5 @@
 import React from "react";
 import Card from "@shared/components/ui/Card";
-import { IndianRupee } from "lucide-react";
 import { formatMoney } from "../utils/salesFormat";
 
 const StatCard = ({ label, value, count, color, delayClass, showResults }) => (
@@ -30,7 +29,7 @@ const StatCard = ({ label, value, count, color, delayClass, showResults }) => (
     >
       {showResults ? (
         <>
-          <IndianRupee size={20} /> {formatMoney(value)}
+          <Wallet size={20} /> {formatMoney(value)}
         </>
       ) : (
         "—"
