@@ -452,39 +452,6 @@ const ReportsPage = () => {
       .sort((a, b) => b.revenue - a.revenue);
   }, [currSales, vehicles]);
 
-  const paymentByVehicles = useMemo(() => {
-    const m = new Map();
-    for (const s of currSales) {
-      if (!s.vehicle_uid) continue;
-      const status = (
-        s.payment_status_text ||
-        s.payment_status ||
-        "Unknown"
-      ).toUpperCase();
-      const veh = vehicles.find((x) => x.vehicle_uid === s.vehicle_uid);
-      const key = s.vehicle_uid;
-      const cur = m.get(key) || {
-        vehicle_uid: s.vehicle_uid,
-        registration: veh?.registration || s.vehicle_number || "",
-        driver: veh?.driver || "Unassigned",
-        paid: 0,
-        pending: 0,
-        failed: 0,
-        totalRevenue: 0,
-      };
-      cur.totalRevenue += s.grand_total || 0;
-      if (status === "PAID") cur.paid += s.grand_total || 0;
-      else if (status === "PENDING" || status === "PARTIAL")
-        cur.pending += s.grand_total || 0;
-      else if (status === "FAILED" || status === "CANCELLED")
-        cur.failed += s.grand_total || 0;
-      m.set(key, cur);
-    }
-    return Array.from(m.values())
-      .sort((a, b) => b.totalRevenue - a.totalRevenue)
-      .slice(0, 10);
-  }, [currSales, vehicles]);
-
   const aging = useMemo(() => {
     const buckets = { "0-7": 0, "8-15": 0, "16-30": 0, "30+": 0 };
     const counts = { "0-7": 0, "8-15": 0, "16-30": 0, "30+": 0 };
@@ -806,7 +773,6 @@ const ReportsPage = () => {
                 />
               </div>
             )}
-
             <button
               onClick={() => {
                 setAppliedFilters({
@@ -943,10 +909,9 @@ const ReportsPage = () => {
       {activeReport === "payment-by-vehicle" && (
         <PaymentByVehicleReport
           filterApplied={filterApplied}
-          paymentByVehicles={paymentByVehicles}
-          vehicleFilter={vehicleFilter}
-          fromDate={fromDate}
-          toDate={toDate}
+          fromDate={appliedFilters.fromDate}
+          toDate={appliedFilters.toDate}
+          vehicleFilter={appliedFilters.vehicleUid || null}
         />
       )}
 

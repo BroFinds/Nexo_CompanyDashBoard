@@ -205,61 +205,6 @@ const OverviewReport = ({
           ))}
         </div>
       </SectionCard>
-
-      <SectionCard
-        title="Receivables Aging"
-        subtitle="Outstanding by age (all sales)"
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {aging.map((b) => {
-            const max = Math.max(...aging.map((x) => x.value), 1);
-            const w = Math.max((b.value / max) * 100, b.value > 0 ? 4 : 0);
-            return (
-              <div key={b.label}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: "0.82rem",
-                    marginBottom: 4,
-                  }}
-                >
-                  <span style={{ fontWeight: 500 }}>{b.label}</span>
-                  <span>
-                    <span
-                      style={{
-                        color: "var(--color-text-subtle)",
-                        marginRight: 10,
-                      }}
-                    >
-                      {b.count}
-                    </span>
-                    <strong>{formatINRShort(b.value)}</strong>
-                  </span>
-                </div>
-                <div
-                  style={{
-                    height: 8,
-                    background: "var(--bg-body)",
-                    borderRadius: 4,
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      height: "100%",
-                      width: `${w}%`,
-                      background: b.color,
-                      borderRadius: 4,
-                      transition: "width 0.6s ease",
-                    }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </SectionCard>
     </div>
 
     <div
