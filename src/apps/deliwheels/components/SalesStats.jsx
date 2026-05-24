@@ -1,4 +1,5 @@
 import React from "react";
+import { Wallet } from "lucide-react";
 import Card from "@shared/components/ui/Card";
 import { formatMoney } from "../utils/salesFormat";
 
