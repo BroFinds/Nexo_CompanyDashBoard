@@ -1,6 +1,5 @@
 import React from "react";
 import Card from "@shared/components/ui/Card";
-import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 
 export const formatINRShort = (n) => {
   const v = Number(n || 0);
@@ -41,6 +40,16 @@ export const AreaChart = ({
   const n = points.length;
 
   const labelStep = n <= 10 ? 1 : n <= 20 ? 2 : n <= 40 ? 4 : Math.ceil(n / 8);
+  const maxIdx = points.reduce(
+    (best, p, i) => (p.value > points[best].value ? i : best),
+    0,
+  );
+  const isLocalPeak = (i) => {
+    if (points[i].value <= 0) return false;
+    const left = i > 0 ? points[i - 1].value : -Infinity;
+    const right = i < n - 1 ? points[i + 1].value : -Infinity;
+    return points[i].value > left && points[i].value > right;
+  };
 
   const yAxisWidth = 52;
   const xAxisHeight = 28;
@@ -137,7 +146,12 @@ export const AreaChart = ({
         {points.map((p, i) => {
           const leftPct = n > 1 ? (i / (n - 1)) * 100 : 50;
           const topPct = (1 - p.value / max) * 100;
-          const showLabel = (i % labelStep === 0 || i === n - 1) && p.value > 0;
+          const showLabel =
+            (i % labelStep === 0 ||
+              i === n - 1 ||
+              i === maxIdx ||
+              isLocalPeak(i)) &&
+            p.value > 0;
           return (
             <React.Fragment key={i}>
               <div
@@ -363,17 +377,7 @@ export const VBarChart = ({
   );
 };
 
-export const KPICard = ({
-  label,
-  value,
-  icon: Icon,
-  color,
-  bg,
-  delta,
-  noDelta,
-}) => {
-  const up = (delta || 0) > 0;
-  const down = (delta || 0) < 0;
+export const KPICard = ({ label, value, icon: Icon, color, bg }) => {
   return (
     <Card padding="lg" style={{ height: "100%" }}>
       <div
@@ -397,28 +401,6 @@ export const KPICard = ({
         >
           <Icon size={20} />
         </div>
-        {!noDelta && delta !== undefined && (
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 2,
-              padding: "3px 8px",
-              borderRadius: 999,
-              fontSize: "0.72rem",
-              fontWeight: 700,
-              backgroundColor: up ? "#d1fae5" : down ? "#fee2e2" : "#f3f4f6",
-              color: up ? "#059669" : down ? "#dc2626" : "#6b7280",
-            }}
-          >
-            {up ? (
-              <ArrowUpRight size={12} />
-            ) : down ? (
-              <ArrowDownRight size={12} />
-            ) : null}
-            {Math.abs(delta)}%
-          </div>
-        )}
       </div>
       <p
         style={{
@@ -570,16 +552,18 @@ export const RankedList = ({
                   }}
                 />
               </div>
-              <span
-                style={{
-                  fontSize: "0.72rem",
-                  color: "var(--color-text-subtle)",
-                  minWidth: 56,
-                  textAlign: "right",
-                }}
-              >
-                {it[metaKey]} {metaSuffix}
-              </span>
+              {it[metaKey] != null && (
+                <span
+                  style={{
+                    fontSize: "0.72rem",
+                    color: "var(--color-text-subtle)",
+                    minWidth: 56,
+                    textAlign: "right",
+                  }}
+                >
+                  {it[metaKey]} {metaSuffix}
+                </span>
+              )}
             </div>
           </div>
         );
