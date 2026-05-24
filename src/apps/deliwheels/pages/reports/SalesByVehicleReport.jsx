@@ -1,11 +1,11 @@
 import React from "react";
 import Card from "@shared/components/ui/Card";
+import Skeleton from "@shared/components/ui/Skeleton";
 import {
   Filter,
   Wallet,
   IndianRupee,
   AlertCircle,
-  Users,
   ShoppingCart,
 } from "lucide-react";
 import {
@@ -15,14 +15,39 @@ import {
   SectionCard,
   formatINRShort,
 } from "./ReportHelpers";
+import { useSalesSummaryReport } from "../../context/useSalesSummaryReport";
+
+const formatDateShort = (iso) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+};
+
+const formatDateTime = (iso) => {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "2-digit",
+  });
+};
 
 const SalesByVehicleReport = ({
   filterApplied,
-  byVehicleData,
   vehicleFilter,
   fromDate,
   toDate,
 }) => {
+  const { data, isLoading, error } = useSalesSummaryReport({
+    enabled: filterApplied,
+    fromDate,
+    toDate,
+    vehicleUid: vehicleFilter,
+  });
+
   if (!filterApplied) {
     return (
       <Card
@@ -41,6 +66,92 @@ const SalesByVehicleReport = ({
     );
   }
 
+  if (error) {
+    return (
+      <Card
+        padding="lg"
+        style={{ marginBottom: "var(--spacing-lg)", color: "#dc2626" }}
+      >
+        Failed to load sales report: {error}
+      </Card>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="animate-in">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: "var(--spacing-lg)",
+            marginBottom: "var(--spacing-lg)",
+          }}
+        >
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} padding="lg">
+              <Skeleton
+                width="40px"
+                height="40px"
+                borderRadius="10px"
+                style={{ marginBottom: 12 }}
+              />
+              <Skeleton width="60%" height="28px" style={{ marginBottom: 6 }} />
+              <Skeleton width="80%" height="14px" />
+            </Card>
+          ))}
+        </div>
+        <div style={{ marginBottom: "var(--spacing-lg)" }}>
+          <SectionCard title="Daily Quantity Trend" subtitle="Loading…">
+            <Skeleton width="100%" height="220px" borderRadius="8px" />
+          </SectionCard>
+        </div>
+        <div
+          className="report-grid-2"
+          style={{ marginBottom: "var(--spacing-lg)" }}
+        >
+          <SectionCard title="Top 10 Shops" subtitle="Loading…">
+            <Skeleton width="100%" height="160px" borderRadius="8px" />
+          </SectionCard>
+          <SectionCard title="Top 10 Products" subtitle="Loading…">
+            <Skeleton width="100%" height="160px" borderRadius="8px" />
+          </SectionCard>
+        </div>
+        <div style={{ marginBottom: "var(--spacing-lg)" }}>
+          <SectionCard title="Recent Sales" subtitle="Loading…">
+            <Skeleton width="100%" height="200px" borderRadius="8px" />
+          </SectionCard>
+        </div>
+      </div>
+    );
+  }
+
+  const summary = data?.summary || {};
+  const totalRevenue = Number(summary.total_revenue) || 0;
+  const totalPaid = Number(summary.total_paid_amount) || 0;
+  const totalPending = Number(summary.total_pending_payment) || 0;
+  const totalRecords = Number(summary.total_records) || 0;
+
+  const trendPoints = (data?.trend ?? []).map((t) => ({
+    key: t.trend_date,
+    label: formatDateShort(t.trend_date),
+    value: Number(t.total_quantity) || 0,
+  }));
+
+  const topShops = (data?.top_five_shops ?? []).map((s) => ({
+    key: s.shop_uid,
+    name: s.shop_owner_name || "—",
+    revenue: Number(s.total_revenue) || 0,
+  }));
+
+  const topProducts = (data?.top_five_products ?? []).map((p) => ({
+    key: p.product_uid,
+    name: p.product_name || "—",
+    revenue: Number(p.total_revenue) || 0,
+  }));
+
+  const recent = data?.last_25_sales ?? [];
+
   return (
     <div className="animate-in">
       <div
@@ -53,7 +164,7 @@ const SalesByVehicleReport = ({
       >
         <KPICard
           label="Total Sales"
-          value={byVehicleData.orders.toLocaleString("en-IN")}
+          value={totalRecords.toLocaleString("en-IN")}
           icon={ShoppingCart}
           color="#6366f1"
           bg="#e0e7ff"
@@ -61,44 +172,41 @@ const SalesByVehicleReport = ({
         />
         <KPICard
           label="Revenue"
-          value={formatINRShort(byVehicleData.revenue)}
+          value={formatINRShort(totalRevenue)}
           icon={IndianRupee}
           color="#059669"
           bg="#d1fae5"
           noDelta
         />
         <KPICard
-          label="Collected"
-          value={formatINRShort(byVehicleData.collected)}
+          label="Total Paid"
+          value={formatINRShort(totalPaid)}
           icon={Wallet}
           color="#0891b2"
           bg="#cffafe"
           noDelta
         />
         <KPICard
-          label="Outstanding"
-          value={formatINRShort(byVehicleData.outstanding)}
+          label="Total Pending"
+          value={formatINRShort(totalPending)}
           icon={AlertCircle}
-          color={byVehicleData.outstanding > 0 ? "#dc2626" : "#059669"}
-          bg={byVehicleData.outstanding > 0 ? "#fee2e2" : "#d1fae5"}
-          noDelta
-        />
-        <KPICard
-          label="Shops Served"
-          value={byVehicleData.uniqueShops}
-          icon={Users}
-          color="#ea580c"
-          bg="#ffedd5"
+          color={totalPending > 0 ? "#d97706" : "#059669"}
+          bg={totalPending > 0 ? "#fef3c7" : "#d1fae5"}
           noDelta
         />
       </div>
 
       <div style={{ marginBottom: "var(--spacing-lg)" }}>
         <SectionCard
-          title="Daily Sales Trend"
-          subtitle={`${vehicleFilter ? "Revenue for the selected vehicle" : "Revenue across all vehicles"} between ${fromDate || "—"} and ${toDate || "—"}`}
+          title="Daily Quantity Trend"
+          subtitle={`${vehicleFilter ? "Units sold for the selected vehicle" : "Units sold across all vehicles"} between ${fromDate || "—"} and ${toDate || "—"}`}
         >
-          <AreaChart points={byVehicleData.trend} height={220} />
+          <AreaChart
+            points={trendPoints}
+            height={220}
+            color="#7c3aed"
+            formatY={(v) => `${v}u`}
+          />
         </SectionCard>
       </div>
 
@@ -106,22 +214,17 @@ const SalesByVehicleReport = ({
         className="report-grid-2"
         style={{ marginBottom: "var(--spacing-lg)" }}
       >
-        <SectionCard title="Top Shops">
-          <RankedList
-            items={byVehicleData.shops.slice(0, 10)}
-            barColor="var(--color-primary)"
-          />
+        <SectionCard
+          title="Top 10 Shops"
+          subtitle="Revenue per shop on the filtered sales"
+        >
+          <RankedList items={topShops} barColor="var(--color-primary)" />
         </SectionCard>
         <SectionCard
-          title="Top Products"
+          title="Top 10 Products"
           subtitle="Revenue per product on the filtered sales"
         >
-          <RankedList
-            items={byVehicleData.products.slice(0, 10)}
-            metaKey="units"
-            metaSuffix="units"
-            barColor="#7c3aed"
-          />
+          <RankedList items={topProducts} barColor="#7c3aed" />
         </SectionCard>
       </div>
 
@@ -130,7 +233,7 @@ const SalesByVehicleReport = ({
           title="Recent Sales"
           subtitle="Latest 25 sales in this selection"
         >
-          {byVehicleData.recent.length === 0 ? (
+          {recent.length === 0 ? (
             <p
               style={{
                 color: "var(--color-text-subtle)",
@@ -150,19 +253,15 @@ const SalesByVehicleReport = ({
                     <th>Invoice</th>
                     <th>Shop</th>
                     <th>Vehicle</th>
+                    <th>Driver</th>
+                    <th>Payment Mode</th>
                     <th className="num">Amount</th>
                     <th className="num">Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {byVehicleData.recent.map((s) => {
-                    const raw = s.sale_date || s.created_on;
-                    const d = raw ? new Date(raw) : null;
-                    const status = (
-                      s.payment_status_text ||
-                      s.payment_status ||
-                      ""
-                    ).toUpperCase();
+                  {recent.map((s, i) => {
+                    const status = (s.payment_status || "").toUpperCase();
                     const statusColor =
                       status === "PAID"
                         ? { c: "#059669", bg: "#d1fae5" }
@@ -170,15 +269,9 @@ const SalesByVehicleReport = ({
                           ? { c: "#92400e", bg: "#fef3c7" }
                           : { c: "#6b7280", bg: "#f3f4f6" };
                     return (
-                      <tr key={s.sale_uid}>
+                      <tr key={`${s.invoice || "row"}-${i}`}>
                         <td style={{ whiteSpace: "nowrap" }}>
-                          {d instanceof Date && !Number.isNaN(d.getTime())
-                            ? d.toLocaleDateString("en-IN", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "2-digit",
-                              })
-                            : "—"}
+                          {formatDateTime(s.created_on)}
                         </td>
                         <td
                           style={{
@@ -186,8 +279,14 @@ const SalesByVehicleReport = ({
                             fontSize: "0.78rem",
                           }}
                         >
-                          {s.invoice_no || "—"}
+                          {s.invoice || "—"}
                         </td>
+                        <td>{s.shop || "—"}</td>
+                        <td style={{ fontFamily: "monospace" }}>
+                          {s.vehicle_number || "—"}
+                        </td>
+                        <td>{s.driver_name || "Unassigned"}</td>
+                        <td>{s.payment_mode || "—"}</td>
                         <td>{s.shop_owner_name || "—"}</td>
                         <td style={{ fontFamily: "monospace" }}>
                           {s.vehicle_number || "—"}
