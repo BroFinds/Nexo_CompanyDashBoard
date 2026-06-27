@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Modal from "@shared/components/ui/Modal";
 import Button from "@shared/components/ui/Button";
+import SearchableSelect from "@shared/components/ui/SearchableSelect";
 import { Eye, EyeOff } from "lucide-react";
 
 const EMPTY_VEHICLE = {
@@ -50,19 +51,49 @@ const VehicleFormModal = ({
   useEffect(() => {
     if (!isOpen) return;
     if (initialVehicle) {
+      const selectedEmployee = (employees || []).find(
+        (emp) => emp.employee_uid === initialVehicle.employee_uid,
+      );
+      const selectedEmployeeUid = selectedEmployee?.employee_uid || "";
+      const selectedEmployeeName = selectedEmployee?.name || initialVehicle.driver || "Unassigned";
+      const selectedRouteUid = initialVehicle.route_uid || "";
+
       setFormData({
+        ...EMPTY_VEHICLE,
         ...initialVehicle,
+        employee_uid: selectedEmployeeUid,
+        route_uid: selectedRouteUid,
+        driver: selectedEmployeeName,
         is_active: initialVehicle.status === "active",
       });
     } else {
-      setFormData({ ...EMPTY_VEHICLE });
+      const activeRoutes = (routes || []).filter((r) => r.status === "active");
+      const activeEmployees = (employees || []).filter((e) => e.is_active);
+      const defaultRoute = activeRoutes.length === 1 ? activeRoutes[0].route_uid : "";
+      const defaultEmployee = activeEmployees.length === 1 ? activeEmployees[0].employee_uid : "";
+      const defaultEmployeeName = activeEmployees.length === 1 ? activeEmployees[0].name : "Unassigned";
+      setFormData({
+        ...EMPTY_VEHICLE,
+        route_uid: defaultRoute,
+        employee_uid: defaultEmployee,
+        driver: defaultEmployeeName,
+      });
     }
     setFormError("");
     setShowPassword(false);
-  }, [isOpen, initialVehicle]);
+  }, [isOpen, initialVehicle, routes, employees]);
 
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
+    if (type === "checkbox") {
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+    if (formError) setFormError("");
+  };
+
+  const handleSelectChange = (name, value) => {
     if (name === "employee_uid") {
       const emp = (employees || []).find((em) => em.employee_uid === value);
       setFormData((prev) => ({
@@ -70,8 +101,6 @@ const VehicleFormModal = ({
         employee_uid: value,
         driver: emp?.name || "Unassigned",
       }));
-    } else if (type === "checkbox") {
-      setFormData((prev) => ({ ...prev, [name]: checked }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -224,37 +253,35 @@ const VehicleFormModal = ({
         >
           <div>
             <label style={labelStyle}>Driver</label>
-            <select
-              name="employee_uid"
-              value={formData.employee_uid || ""}
-              onChange={handleFormChange}
-              style={fieldStyle}
-            >
-              {(employees || [])
+            <SearchableSelect
+              options={(employees || [])
                 .filter((e) => e.is_active)
-                .map((emp) => (
-                  <option key={emp.employee_uid} value={emp.employee_uid}>
-                    {emp.name}
-                  </option>
-                ))}
-            </select>
+                .map((emp) => ({
+                  value: emp.employee_uid,
+                  label: emp.name,
+                  sub: emp.role || "Active employee",
+                }))}
+              value={formData.employee_uid || ""}
+              onChange={(val) => handleSelectChange("employee_uid", val)}
+              placeholder="Search driver..."
+              noResultsText="No drivers found"
+            />
           </div>
           <div>
             <label style={labelStyle}>Assign Route</label>
-            <select
-              name="route_uid"
-              value={formData.route_uid || ""}
-              onChange={handleFormChange}
-              style={fieldStyle}
-            >
-              {routes
+            <SearchableSelect
+              options={(routes || [])
                 .filter((r) => r.status === "active")
-                .map((r) => (
-                  <option key={r.route_uid} value={r.route_uid}>
-                    {r.origin} → {r.destination}
-                  </option>
-                ))}
-            </select>
+                .map((r) => ({
+                  value: r.route_uid,
+                  label: `${r.origin} → ${r.destination}`,
+                  sub: r.route_code || "Active route",
+                }))}
+              value={formData.route_uid || ""}
+              onChange={(val) => handleSelectChange("route_uid", val)}
+              placeholder="Search route..."
+              noResultsText="No routes found"
+            />
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>

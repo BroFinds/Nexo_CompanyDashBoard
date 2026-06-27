@@ -9,6 +9,14 @@ import { Plus } from "lucide-react";
 import { useDeliwheels } from "../context/DeliwheelsContext";
 import { useGlobal } from "../../nexo/context/GlobalContext";
 
+const todayISO = () => {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 const StockPage = () => {
   const {
     stock,
@@ -27,8 +35,8 @@ const StockPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterVehicle, setFilterVehicle] = useState("all");
   const [filterProduct, setFilterProduct] = useState("");
-  const [filterFromDate, setFilterFromDate] = useState("");
-  const [filterToDate, setFilterToDate] = useState("");
+  const [filterFromDate, setFilterFromDate] = useState(todayISO);
+  const [filterToDate, setFilterToDate] = useState(todayISO);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
 

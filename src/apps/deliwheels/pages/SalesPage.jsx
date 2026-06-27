@@ -6,6 +6,14 @@ import SalesTable from "../components/SalesTable";
 import SaleDetailModal from "./modals/sales/SaleDetailModal";
 import { useDeliwheels } from "../context/DeliwheelsContext";
 
+const todayISO = () => {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 const SalesPage = () => {
   const {
     sales,
@@ -22,8 +30,8 @@ const SalesPage = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterVehicle, setFilterVehicle] = useState("all");
-  const [filterFromDate, setFilterFromDate] = useState("");
-  const [filterToDate, setFilterToDate] = useState("");
+  const [filterFromDate, setFilterFromDate] = useState(todayISO);
+  const [filterToDate, setFilterToDate] = useState(todayISO);
 
   const [detailSale, setDetailSale] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);

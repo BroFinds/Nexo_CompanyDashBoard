@@ -287,10 +287,6 @@ const SalesByVehicleReport = ({
                         </td>
                         <td>{s.driver_name || "Unassigned"}</td>
                         <td>{s.payment_mode || "—"}</td>
-                        <td>{s.shop_owner_name || "—"}</td>
-                        <td style={{ fontFamily: "monospace" }}>
-                          {s.vehicle_number || "—"}
-                        </td>
                         <td className="num strong">
                           {formatINRShort(s.grand_total)}
                         </td>
