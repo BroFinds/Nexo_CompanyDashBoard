@@ -9,6 +9,7 @@ import { GlobalProvider } from "./apps/nexo/context/GlobalContext";
 import { DeliwheelsProvider } from "./apps/deliwheels/context/DeliwheelsContext";
 import WorkspaceInitGate from "./shared/components/init/WorkspaceInitGate";
 import "./index.css";
+import NovoApp from "./apps/novo/Novo";
 
 // Authenticated shell: providers and the workspace init gate live above the
 // nexo/deliwheels route split, so products + vehicles are fetched once in
@@ -44,6 +45,16 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           element={
             <AuthenticatedShell>
               <DeliwheelsApp />
+            </AuthenticatedShell>
+          }
+        />
+
+        {/* Nova — auth required */}
+        <Route
+          path="/nova/*"
+          element={
+            <AuthenticatedShell>
+              <NovoApp />
             </AuthenticatedShell>
           }
         />

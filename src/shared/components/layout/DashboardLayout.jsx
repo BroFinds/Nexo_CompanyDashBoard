@@ -40,7 +40,7 @@ const DashboardLayout = ({ children, navItems, brand, headerTitle, headerSubtitl
           flex: 1, 
           paddingTop: 'var(--spacing-lg)'
         }}>
-          <div className="content-container" style={{ padding: '0 var(--spacing-lg)' }}>
+          <div className="content-container">
             {children}
           </div>
         </main>
