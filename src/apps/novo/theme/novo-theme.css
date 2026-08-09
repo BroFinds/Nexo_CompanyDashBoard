@@ -400,6 +400,38 @@
   border: 1px solid rgba(148, 163, 184, 0.16);
 }
 
+[data-app="novo"] .novo-file-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+[data-app="novo"] .novo-file-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-main);
+  font-weight: 600;
+}
+
+[data-app="novo"] .novo-file-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+[data-app="novo"] .novo-file-actions .novo-btn {
+  white-space: nowrap;
+}
+
 [data-app="novo"] .novo-switch {
   display: inline-flex;
   align-items: center;

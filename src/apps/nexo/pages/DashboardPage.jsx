@@ -3,11 +3,12 @@ import NexoLayout from "../components/NexoLayout";
 import Card from "@shared/components/ui/Card";
 import { ArrowRight, Lock, Info } from "lucide-react";
 import { getSession } from "@/services/api";
+import { useEnabledApps } from "@/shared/context/EnabledAppsContext";
 import { ALL_APPS } from "../constants/apps";
 
 const DashboardPage = () => {
   const session = getSession();
-  const enabledApps = session?.apps ?? [];
+  const { enabledApps } = useEnabledApps();
   const companyName = session?.companyName || "company";
   const [tooltipApp, setTooltipApp] = useState(null);
 

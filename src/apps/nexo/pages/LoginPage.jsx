@@ -4,9 +4,11 @@ import Card from '@shared/components/ui/Card';
 import Input from '@shared/components/ui/Input';
 import Button from '@shared/components/ui/Button';
 import api, { setSession } from '@/services/api';
+import { useEnabledApps } from '@/shared/context/EnabledAppsContext';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { setEnabledApps } = useEnabledApps();
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -24,7 +26,9 @@ const LoginPage = () => {
         username: formData.username,
         password: formData.password,
       });
-      setSession(data);
+      const { apps = [], ...authPayload } = data || {};
+      setSession(authPayload);
+      setEnabledApps(apps);
       navigate('/');
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data || 'Invalid username or password.';
