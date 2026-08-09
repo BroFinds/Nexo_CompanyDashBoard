@@ -15,20 +15,25 @@ const api = axios.create({
 
 export const getSession = () => {
   try {
-    return JSON.parse(localStorage.getItem("nexo_session"));
+    const stored = JSON.parse(localStorage.getItem("nexo_session"));
+    if (!stored || typeof stored !== "object") return null;
+    const { apps, ...safeSession } = stored;
+    return safeSession;
   } catch {
     return null;
   }
 };
 
 export const setSession = (data) => {
-  localStorage.setItem("nexo_session", JSON.stringify(data));
+  const { apps, ...safeData } = data || {};
+  localStorage.setItem("nexo_session", JSON.stringify(safeData));
 };
 
 export const clearSession = () => {
   localStorage.removeItem("nexo_session");
   localStorage.removeItem("nexo_products_cache");
   localStorage.removeItem("nexo_vehicles_cache");
+  window.dispatchEvent(new Event("nexo_logout"));
 };
 
 export const pingService = async (serviceName) => {
