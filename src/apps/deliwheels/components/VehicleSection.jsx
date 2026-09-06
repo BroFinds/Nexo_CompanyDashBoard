@@ -7,7 +7,6 @@ const VehicleSection = ({
   emptyMessage,
   onCardClick,
   getDriverName,
-  getRouteLabel,
   style,
 }) => {
   return (
@@ -47,7 +46,6 @@ const VehicleSection = ({
             <VehicleCard
               vehicle={v}
               driverName={getDriverName(v)}
-              routeLabel={getRouteLabel(v)}
               onClick={() => onCardClick(v)}
             />
           </div>

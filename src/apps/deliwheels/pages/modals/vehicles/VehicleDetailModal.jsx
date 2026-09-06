@@ -9,7 +9,6 @@ const VehicleDetailModal = ({
   onEdit,
   onDisable,
   getDriverName,
-  getRouteLabel,
 }) => {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -36,7 +35,6 @@ const VehicleDetailModal = ({
     ? [
         { l: "Status", v: vehicle.status },
         { l: "Driver", v: getDriverName(vehicle) },
-        { l: "Assigned Route", v: getRouteLabel(vehicle), span: true },
       ]
     : [];
 

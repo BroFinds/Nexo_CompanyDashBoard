@@ -14,6 +14,8 @@ export const mapStockAdded = (s) => ({
   vehicle_number: s.vehicleNumber || s.vehicle_number || "",
   company_uid: s.companyUid || s.company_uid || "",
   quantity: parseInt(s.totalQuantity ?? s.total_quantity ?? s.quantity ?? 0, 10) || 0,
+  delivered_quantity: parseFloat(s.deliveredQuantity ?? s.delivered_quantity ?? 0) || 0,
+  remaining_quantity: parseFloat(s.remainingQuantity ?? s.remaining_quantity ?? s.totalQuantity ?? s.total_quantity ?? s.quantity ?? 0) || 0,
   loaded_date: (s.stockAddedDate || s.stock_added_date || s.createdAt || "").split("T")[0],
   created_at: s.createdAt || "",
   updated_at: s.updatedAt || "",
@@ -93,7 +95,7 @@ export const useStock = () => {
           companyUid: session.companyId,
           vehicleUid,
           productUid,
-          totalQuantity: String(quantity),
+          totalQuantity: quantity,
           stockAddedDate: toLocalDateTime(),
           createdBy: session.userId,
         });
@@ -116,7 +118,7 @@ export const useStock = () => {
         companyUid: session.companyId,
         vehicleUid: updatedEntry.vehicle_uid,
         productUid: updatedEntry.product_uid,
-        totalQuantity: String(updatedEntry.quantity),
+        totalQuantity: updatedEntry.quantity,
         stockAddedDate: toLocalDateTime(updatedEntry.loaded_date || undefined),
         modifiedBy: session.userId,
       });
@@ -129,6 +131,11 @@ export const useStock = () => {
     }
   }, []);
 
+  const fetchStockLogs = useCallback(async (stockUid) => {
+    const { data } = await api.get(`/api/v1/deliwheels/stock-added/${stockUid}/logs`);
+    return data;
+  }, []);
+
   return {
     stock,
     isLoadingStock,
@@ -139,5 +146,6 @@ export const useStock = () => {
     refreshStock,
     addStockLoading,
     updateStock,
+    fetchStockLogs,
   };
 };

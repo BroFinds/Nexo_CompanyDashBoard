@@ -52,19 +52,6 @@ const VehiclesPage = () => {
     onLoadMore: fetchVehicles,
   });
 
-  const formatRoute = (r) => (r ? `${r.origin} → ${r.destination}` : "");
-
-  const getRouteLabel = (v) => {
-    if (v.route_origin || v.route_destination) {
-      return formatRoute({
-        origin: v.route_origin,
-        destination: v.route_destination,
-      });
-    }
-    if (!v.route_uid) return "Unassigned";
-    const r = routes.find((r) => r.route_uid === v.route_uid);
-    return r ? formatRoute(r) : "Unassigned";
-  };
 
   const getDriverName = (v) => {
     if (v.employee_uid) {
@@ -204,7 +191,6 @@ const VehiclesPage = () => {
             emptyMessage="No active vehicles found."
             onCardClick={setSelectedVehicle}
             getDriverName={getDriverName}
-            getRouteLabel={getRouteLabel}
             style={{ marginBottom: "var(--spacing-xl)" }}
           />
 
@@ -214,7 +200,7 @@ const VehiclesPage = () => {
             emptyMessage="No inactive vehicles."
             onCardClick={setSelectedVehicle}
             getDriverName={getDriverName}
-            getRouteLabel={getRouteLabel}
+
           />
 
           <div ref={sentinelRef} style={{ height: "1px" }} />
@@ -228,7 +214,6 @@ const VehiclesPage = () => {
         onEdit={handleEditClick}
         onDisable={handleDisable}
         getDriverName={getDriverName}
-        getRouteLabel={getRouteLabel}
       />
 
       <VehicleFormModal
@@ -236,7 +221,6 @@ const VehiclesPage = () => {
         onClose={() => setIsFormOpen(false)}
         initialVehicle={editingVehicle}
         employees={employees}
-        routes={routes}
         onAdd={addVehicle}
         onUpdate={updateVehicle}
         onSetStatus={setVehicleStatus}

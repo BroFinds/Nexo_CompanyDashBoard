@@ -250,6 +250,24 @@ export const useVehicles = () => {
     }
   }, []);
 
+  const assignRoute = useCallback(async (vehicleUid, routeUid) => {
+    try {
+      const { data } = await api.patch(
+        `/api/v1/deliwheels/vehicles/${vehicleUid}/route/${routeUid}`,
+      );
+      const mapped = mapVehicle(data);
+      setVehicles((prev) =>
+        prev.map((v) =>
+          v.vehicle_uid === vehicleUid ? { ...v, route_uid: mapped.route_uid } : v,
+        ),
+      );
+      return mapped;
+    } catch (e) {
+      console.error("assignRoute:", e);
+      throw e;
+    }
+  }, []);
+
   return {
     vehicles,
     isLoadingVehicles,
@@ -263,5 +281,6 @@ export const useVehicles = () => {
     updateVehicle,
     deleteVehicle,
     setVehicleStatus,
+    assignRoute,
   };
 };

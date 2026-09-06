@@ -8,6 +8,7 @@ const EMPTY_ROUTE = {
   destination: "",
   status: "active",
   is_active: true,
+  is_bidirectional: false,
 };
 
 const fieldStyle = {
@@ -45,6 +46,7 @@ const RouteFormModal = ({
       setFormData({
         ...initialRoute,
         is_active: initialRoute.status !== "inactive",
+        is_bidirectional: initialRoute.is_bidirectional ?? false,
       });
     } else {
       setFormData({ ...EMPTY_ROUTE });
@@ -68,13 +70,13 @@ const RouteFormModal = ({
 
     try {
       if (isEditMode) {
-        await onUpdate({ ...formData, name: routeName });
+        await onUpdate({ ...formData, name: routeName, isBidirectional: !!formData.is_bidirectional });
         const wasActive = formData.status !== "inactive";
         if (formData.is_active !== wasActive) {
           await onSetStatus(formData.route_uid, !!formData.is_active);
         }
       } else {
-        await onAdd({ ...formData, name: routeName });
+        await onAdd({ ...formData, name: routeName, isBidirectional: !!formData.is_bidirectional });
       }
       onClose();
     } catch (err) {
@@ -119,33 +121,36 @@ const RouteFormModal = ({
             />
           </div>
         </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
-          <input
-            type="checkbox"
-            id="routeIsActive"
-            checked={!!formData.is_active}
-            onChange={(e) =>
-              setFormData({ ...formData, is_active: e.target.checked })
-            }
-            style={{
-              width: "20px",
-              height: "20px",
-              accentColor: "var(--color-primary)",
-            }}
-          />
-          <label
-            htmlFor="routeIsActive"
-            style={{ fontSize: "0.9rem", fontWeight: "500" }}
-          >
-            Is Active Route
-          </label>
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "10px" }}>
+            <input
+              type="checkbox"
+              id="routeIsActive"
+              checked={!!formData.is_active}
+              onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+              style={{ width: "20px", height: "20px", accentColor: "var(--color-primary)" }}
+            />
+            <label htmlFor="routeIsActive" style={{ fontSize: "0.9rem", fontWeight: "500" }}>
+              Is Active Route
+            </label>
+          </div>
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-start", gap: "10px" }}>
+            <input
+              type="checkbox"
+              id="routeBidirectional"
+              checked={!!formData.is_bidirectional}
+              onChange={(e) => setFormData({ ...formData, is_bidirectional: e.target.checked })}
+              style={{ width: "20px", height: "20px", marginTop: "2px", accentColor: "var(--color-primary)" }}
+            />
+            <div>
+              <label htmlFor="routeBidirectional" style={{ fontSize: "0.9rem", fontWeight: "500" }}>
+                Bidirectional Route (A ↔ B)
+              </label>
+              <p style={{ fontSize: "0.75rem", color: "var(--color-text-subtle)", marginTop: "2px" }}>
+                Shops on this route are visible to drivers going in either direction (e.g. Kundapur ↔ Mangalore).
+              </p>
+            </div>
+          </div>
         </div>
         {formError && (
           <p

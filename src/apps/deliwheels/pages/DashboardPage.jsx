@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import DeliwheelsLayout from '../components/DeliwheelsLayout';
 import Card from '@shared/components/ui/Card';
 import Skeleton from '@shared/components/ui/Skeleton';
-import { Truck, Route, IndianRupee, PackageCheck, TrendingUp, AlertTriangle, Package, Receipt } from 'lucide-react';
+import { Truck, IndianRupee, PackageCheck, TrendingUp, AlertTriangle, Package, Receipt, Clock } from 'lucide-react';
 import { useDeliwheels } from '../context/DeliwheelsContext';
 
 const formatMoney = (n) =>
@@ -43,18 +43,27 @@ const DashboardPage = () => {
 
   const isLoading = isLoadingVehicles || isLoadingRoutes || isLoadingStock || isLoadingSales;
 
-  const activeVehicles = vehicles.filter(v => v.status === 'active').length;
   const inactiveVehicles = vehicles.filter(v => v.status !== 'active').length;
-  const activeRoutes = routes.filter(r => r.status === 'active').length;
-  const inactiveRoutes = routes.filter(r => r.status !== 'active').length;
+  const inactiveRoutes   = routes.filter(r => r.status !== 'active').length;
 
+  // Today's completed deliveries — only sales actually submitted today
   const todaysSales = useMemo(() => sales.filter(s => isToday(s.sale_date)), [sales]);
   const todaysRevenue = todaysSales.reduce((sum, s) => sum + Number(s.grand_total || 0), 0);
+
+  // Unpaid invoices across all sales
   const pendingPayments = useMemo(
     () => sales.filter(s => (s.payment_status_text || '').toUpperCase() !== 'PAID'),
     [sales],
   );
   const pendingAmount = pendingPayments.reduce((sum, s) => sum + Number(s.grand_total || 0), 0);
+
+  // Stock loaded today — sum of total_quantity for stock entries created today
+  const todaysLoadedUnits = useMemo(
+    () => stock
+      .filter(s => isToday(s.stock_added_date || s.created_at || s.loaded_date))
+      .reduce((sum, s) => sum + Number(s.total_quantity || s.quantity || 0), 0),
+    [stock],
+  );
 
   const recentSales = useMemo(
     () => [...sales]
@@ -84,24 +93,38 @@ const DashboardPage = () => {
 
   const stats = [
     {
-      label: 'Total Vehicles', value: vehicles.length,
-      sub: `${activeVehicles} active`,
-      icon: Truck, color: 'var(--color-primary)', bg: 'var(--color-primary-subtle)',
+      label: "Deliveries Today",
+      value: todaysSales.length,
+      sub: todaysSales.length === 0 ? 'No deliveries yet' : `${sales.length} all-time`,
+      icon: PackageCheck,
+      color: '#059669',
+      bg: 'linear-gradient(135deg, #d1fae5, #a7f3d0)',
     },
     {
-      label: 'Active Routes', value: activeRoutes,
-      sub: `of ${routes.length} total`,
-      icon: Route, color: '#0891b2', bg: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+      label: "Stock Loaded Today",
+      value: todaysLoadedUnits,
+      sub: stock.filter(s => isToday(s.stock_added_date || s.created_at || s.loaded_date)).length + ' loading entries',
+      icon: Package,
+      color: '#0891b2',
+      bg: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
     },
     {
-      label: "Today's Sales", value: todaysSales.length,
-      sub: `${sales.length} all-time`,
-      icon: PackageCheck, color: '#059669', bg: 'linear-gradient(135deg, #d1fae5, #a7f3d0)',
-    },
-    {
-      label: "Today's Revenue", value: `₹${formatCompact(todaysRevenue)}`,
+      label: "Today's Revenue",
+      value: `₹${formatCompact(todaysRevenue)}`,
       sub: pendingAmount > 0 ? `₹${formatCompact(pendingAmount)} pending` : 'All settled',
-      icon: IndianRupee, color: '#7c3aed', bg: 'linear-gradient(135deg, #ede9fe, #ddd6fe)',
+      icon: IndianRupee,
+      color: '#7c3aed',
+      bg: 'linear-gradient(135deg, #ede9fe, #ddd6fe)',
+    },
+    {
+      label: "Unpaid Invoices",
+      value: pendingPayments.length,
+      sub: pendingPayments.length > 0 ? `₹${formatCompact(pendingAmount)} outstanding` : 'All cleared',
+      icon: Clock,
+      color: pendingPayments.length > 0 ? '#d97706' : '#059669',
+      bg: pendingPayments.length > 0
+        ? 'linear-gradient(135deg, #fef3c7, #fde68a)'
+        : 'linear-gradient(135deg, #d1fae5, #a7f3d0)',
     },
   ];
 
@@ -228,7 +251,7 @@ const DashboardPage = () => {
                           </div>
                           <div style={{ textAlign: 'right', flexShrink: 0 }}>
                             <p style={{ fontSize: '0.85rem', fontWeight: 700, fontFamily: 'monospace' }}>₹{formatMoney(v.revenue)}</p>
-                            <p style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)' }}>{v.count} sale{v.count === 1 ? '' : 's'}</p>
+                            <p style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)' }}>{v.count} delivery{v.count === 1 ? '' : 's'}</p>
                           </div>
                         </div>
                         <div style={{ height: '6px', borderRadius: '3px', backgroundColor: 'var(--bg-body)', overflow: 'hidden' }}>
@@ -243,16 +266,16 @@ const DashboardPage = () => {
                   })
               }
               {!isLoadingSales && topVehicles.length === 0 && (
-                <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '20px' }}>No sales data yet</p>
+                <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '20px' }}>No deliveries yet</p>
               )}
             </div>
           </Card>
         </div>
 
-        {/* Recent Sales */}
+        {/* Recent Deliveries */}
         <div className="animate-in delay-300">
           <Card padding="lg">
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: 'var(--spacing-md)' }}>Recent Sales</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: 'var(--spacing-md)' }}>Recent Deliveries</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {isLoadingSales
                 ? [1,2,3,4].map(i => (
@@ -294,7 +317,7 @@ const DashboardPage = () => {
                   })
               }
               {!isLoadingSales && sales.length === 0 && (
-                <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '20px' }}>No sales recorded yet</p>
+                <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '20px' }}>No deliveries recorded yet</p>
               )}
             </div>
           </Card>
@@ -333,7 +356,7 @@ const DashboardPage = () => {
                         fontSize: '0.7rem', fontWeight: '600', padding: '3px 8px', borderRadius: '12px', flexShrink: 0,
                         backgroundColor: 'rgba(124, 58, 237, 0.1)', color: '#7c3aed'
                       }}>
-                        {s.quantity}×
+                        {s.quantity || s.total_quantity}×
                       </span>
                     </div>
                   ))

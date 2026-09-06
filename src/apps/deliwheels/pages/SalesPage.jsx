@@ -31,15 +31,14 @@ const SalesPage = () => {
 
   useEffect(() => {
     if (!vehiclesLoaded) fetchVehicles();
-    // Sales is intentionally NOT fetched on mount — user applies a filter
-    // first so we never load the full table by default.
-  }, [vehiclesLoaded, fetchVehicles]);
+    if (!salesLoaded) searchSales({});
+  }, [vehiclesLoaded, fetchVehicles, salesLoaded, searchSales]);
 
   const hasCompleteDateRange = !!filterFromDate && !!filterToDate;
   const hasServerFilter = filterVehicle !== "all" || hasCompleteDateRange;
 
   useEffect(() => {
-    if (!hasServerFilter) return;
+    if (!salesLoaded) return;
     const handle = setTimeout(() => {
       const filters = {};
       if (filterVehicle !== "all") filters.vehicleUid = filterVehicle;
@@ -51,7 +50,6 @@ const SalesPage = () => {
     }, 250);
     return () => clearTimeout(handle);
   }, [
-    hasServerFilter,
     hasCompleteDateRange,
     filterVehicle,
     filterFromDate,
@@ -94,7 +92,7 @@ const SalesPage = () => {
     filterVehicle !== "all" ||
     !!filterFromDate ||
     !!filterToDate;
-  const showResults = hasServerFilter;
+  const showResults = salesLoaded;
   const visibleSales = showResults ? filteredSales : [];
 
   const isPaid = (s) => (s.payment_status_text || "").toUpperCase() === "PAID";

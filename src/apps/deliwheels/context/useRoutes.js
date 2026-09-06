@@ -8,6 +8,7 @@ export const mapRoute = (r) => {
     route_uid: r.routeUid || r.route_uid || "",
     origin: r.fromPlace || r.origin || "",
     destination: r.toPlace || r.destination || "",
+    is_bidirectional: r.isBidirectional ?? r.is_bidirectional ?? false,
     status:
       activeFlag !== undefined
         ? activeFlag
@@ -71,6 +72,7 @@ export const useRoutes = () => {
         fromPlace: (formData.origin || "").trim(),
         toPlace: (formData.destination || "").trim(),
         active: formData.is_active !== undefined ? formData.is_active : true,
+        isBidirectional: !!formData.isBidirectional,
       });
       const mapped = mapRoute(data);
       setRoutes((prev) => [...prev, mapped]);
@@ -89,6 +91,7 @@ export const useRoutes = () => {
         companyUid: session.companyId,
         fromPlace: (formData.origin || "").trim(),
         toPlace: (formData.destination || "").trim(),
+        isBidirectional: !!formData.isBidirectional,
       });
       const mapped = mapRoute(data);
       setRoutes((prev) => prev.map((r) => (r.route_uid === uid ? mapped : r)));

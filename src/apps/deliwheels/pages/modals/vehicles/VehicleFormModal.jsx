@@ -10,7 +10,6 @@ const EMPTY_VEHICLE = {
   is_active: true,
   driver: "Unassigned",
   employee_uid: "",
-  route_uid: "",
   username: "",
   password: "",
 };
@@ -37,7 +36,6 @@ const VehicleFormModal = ({
   onClose,
   initialVehicle,
   employees,
-  routes,
   onAdd,
   onUpdate,
   onSetStatus,
@@ -215,47 +213,26 @@ const VehicleFormModal = ({
             </p>
           </div>
         </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "12px",
-          }}
-        >
-          <div>
-            <label style={labelStyle}>Driver</label>
-            <select
-              name="employee_uid"
-              value={formData.employee_uid || ""}
-              onChange={handleFormChange}
-              style={fieldStyle}
-            >
-              {(employees || [])
-                .filter((e) => e.is_active)
-                .map((emp) => (
-                  <option key={emp.employee_uid} value={emp.employee_uid}>
-                    {emp.name}
-                  </option>
-                ))}
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle}>Assign Route</label>
-            <select
-              name="route_uid"
-              value={formData.route_uid || ""}
-              onChange={handleFormChange}
-              style={fieldStyle}
-            >
-              {routes
-                .filter((r) => r.status === "active")
-                .map((r) => (
-                  <option key={r.route_uid} value={r.route_uid}>
-                    {r.origin} → {r.destination}
-                  </option>
-                ))}
-            </select>
-          </div>
+        <div>
+          <label style={labelStyle}>Driver</label>
+          <select
+            name="employee_uid"
+            value={formData.employee_uid || ""}
+            onChange={handleFormChange}
+            style={fieldStyle}
+          >
+            <option value="">— Unassigned —</option>
+            {(employees || [])
+              .filter((e) => e.is_active)
+              .map((emp) => (
+                <option key={emp.employee_uid} value={emp.employee_uid}>
+                  {emp.name}
+                </option>
+              ))}
+          </select>
+          <p style={{ fontSize: "0.75rem", color: "var(--color-text-subtle)", marginTop: "4px" }}>
+            Route is assigned automatically when stock is loaded onto this vehicle.
+          </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <input

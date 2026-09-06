@@ -4,7 +4,7 @@ import Button from "@shared/components/ui/Button";
 import SearchableSelect from "@shared/components/ui/SearchableSelect";
 import { Package, Loader2 } from "lucide-react";
 
-const EMPTY_FORM = { product_uid: "", quantity: 1, vehicle_uid: "" };
+const EMPTY_FORM = { product_uid: "", quantity: 1, route_uid: "", vehicle_uid: "" };
 
 const fieldStyle = {
   width: "100%",
@@ -29,8 +29,10 @@ const StockFormModal = ({
   initialEntry,
   products,
   vehicles,
+  routes,
   onAdd,
   onUpdate,
+  onAssignRoute,
 }) => {
   const isEditMode = !!initialEntry;
   const [formData, setFormData] = useState(EMPTY_FORM);
@@ -40,7 +42,15 @@ const StockFormModal = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    setFormData(initialEntry ? { ...initialEntry } : EMPTY_FORM);
+    if (initialEntry) {
+      const vehicle = vehicles.find((v) => v.vehicle_uid === initialEntry.vehicle_uid);
+      setFormData({
+        ...initialEntry,
+        route_uid: vehicle?.route_uid || "",
+      });
+    } else {
+      setFormData(EMPTY_FORM);
+    }
     setFormError("");
     setSuccessMsg("");
     setIsSubmitting(false);
@@ -54,6 +64,23 @@ const StockFormModal = ({
     onClose();
   };
 
+  const activeRoutes = (routes || []).filter((r) => r.status === "active");
+  const activeVehicles = vehicles.filter((v) => v.status === "active");
+
+  const selectedVehicle = vehicles.find((v) => v.vehicle_uid === formData.vehicle_uid);
+  const vehicleNeedsRoute = !isEditMode && !!formData.vehicle_uid && !selectedVehicle?.route_uid;
+
+  const handleVehicleChange = (e) => {
+    const uid = e.target.value;
+    const v = vehicles.find((veh) => veh.vehicle_uid === uid);
+    setFormData((prev) => ({
+      ...prev,
+      vehicle_uid: uid,
+      route_uid: v?.route_uid || "",
+    }));
+    if (formError) setFormError("");
+  };
+
   const handleSave = async () => {
     if (!formData.product_uid) {
       setFormError("Please select a product.");
@@ -63,17 +90,17 @@ const StockFormModal = ({
       setFormError("Please select a vehicle.");
       return;
     }
+    if (vehicleNeedsRoute && !formData.route_uid) {
+      setFormError("This vehicle has no route yet. Please select a route to assign.");
+      return;
+    }
     if (formData.quantity <= 0) {
       setFormError("Quantity must be at least 1.");
       return;
     }
 
-    const product = products.find(
-      (p) => p.product_uid === formData.product_uid,
-    );
-    const vehicle = vehicles.find(
-      (v) => v.vehicle_uid === formData.vehicle_uid,
-    );
+    const product = products.find((p) => p.product_uid === formData.product_uid);
+    const vehicle = vehicles.find((v) => v.vehicle_uid === formData.vehicle_uid);
 
     setIsSubmitting(true);
     try {
@@ -81,20 +108,17 @@ const StockFormModal = ({
         await onUpdate(formData);
         setSuccessMsg(`Updated stock entry for "${product?.product_name}".`);
       } else {
-        await onAdd(
-          formData.product_uid,
-          formData.quantity,
-          formData.vehicle_uid,
-        );
+        if (vehicleNeedsRoute && formData.route_uid && onAssignRoute) {
+          await onAssignRoute(formData.vehicle_uid, formData.route_uid);
+        }
+        await onAdd(formData.product_uid, formData.quantity, formData.vehicle_uid);
         setSuccessMsg(
-          `${formData.quantity} × ${product?.product_name} loaded onto ${(vehicle?.registration || "").toUpperCase()}`,
+          `${formData.quantity} × ${product?.product_name} loaded onto ${(vehicle?.registration || "").toUpperCase()}`
         );
       }
       setFormError("");
     } catch (e) {
-      setFormError(
-        e.response?.data?.message || "Failed to save stock. Check console.",
-      );
+      setFormError(e.response?.data?.message || "Failed to save stock. Check console.");
     } finally {
       setIsSubmitting(false);
     }
@@ -131,8 +155,10 @@ const StockFormModal = ({
                     setFormData((prev) => ({
                       product_uid: "",
                       quantity: 1,
+                      route_uid: prev.route_uid,
                       vehicle_uid: prev.vehicle_uid,
                     }));
+                    setFormError("");
                   }}
                   fullWidth
                 >
@@ -163,29 +189,48 @@ const StockFormModal = ({
                 noResultsText="No products found"
               />
             </div>
+
             <div>
               <label style={labelStyle}>Vehicle *</label>
               <select
                 value={formData.vehicle_uid}
-                onChange={(e) => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    vehicle_uid: e.target.value,
-                  }));
-                  if (formError) setFormError("");
-                }}
+                onChange={handleVehicleChange}
                 style={fieldStyle}
               >
                 <option value="">— Select a vehicle —</option>
-                {vehicles
-                  .filter((v) => v.status === "active")
-                  .map((v) => (
-                    <option key={v.vehicle_uid} value={v.vehicle_uid}>
-                      {v.registration} — {v.model} ({v.driver})
-                    </option>
-                  ))}
+                {activeVehicles.map((v) => (
+                  <option key={v.vehicle_uid} value={v.vehicle_uid}>
+                    {v.registration} — {v.model}
+                    {!v.route_uid ? " (no route)" : ""}
+                  </option>
+                ))}
               </select>
             </div>
+
+            {vehicleNeedsRoute && (
+              <div>
+                <label style={labelStyle}>Assign Route *</label>
+                <select
+                  value={formData.route_uid}
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, route_uid: e.target.value }));
+                    if (formError) setFormError("");
+                  }}
+                  style={fieldStyle}
+                >
+                  <option value="">— Select a route —</option>
+                  {activeRoutes.map((r) => (
+                    <option key={r.route_uid} value={r.route_uid}>
+                      {r.origin} → {r.destination}
+                    </option>
+                  ))}
+                </select>
+                <p style={{ fontSize: "0.75rem", color: "var(--color-text-subtle)", marginTop: "4px" }}>
+                  This vehicle has no route assigned. Select one now — it will be saved to the vehicle.
+                </p>
+              </div>
+            )}
+
             <div>
               <label style={labelStyle}>Quantity *</label>
               <input
@@ -231,18 +276,11 @@ const StockFormModal = ({
               }}
             >
               {isSubmitting ? (
-                <Loader2
-                  size={16}
-                  style={{ animation: "spin 0.7s linear infinite" }}
-                />
+                <Loader2 size={16} style={{ animation: "spin 0.7s linear infinite" }} />
               ) : (
                 <Package size={16} />
               )}{" "}
-              {isSubmitting
-                ? "Saving…"
-                : isEditMode
-                  ? "Save Changes"
-                  : "Load to Vehicle"}
+              {isSubmitting ? "Saving…" : isEditMode ? "Save Changes" : "Load to Vehicle"}
             </Button>
           </>
         )}

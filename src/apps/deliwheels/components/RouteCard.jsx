@@ -33,7 +33,7 @@ const RouteCard = ({ route, onClick }) => {
             marginRight: "8px",
           }}
         >
-          {route.origin} → {route.destination}
+          {route.origin} {route.is_bidirectional ? "↔" : "→"} {route.destination}
         </h3>
         <Badge variant={getStatusVariant(route.status)}>
           {route.status.charAt(0).toUpperCase() + route.status.slice(1)}

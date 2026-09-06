@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardPage from './pages/DashboardPage';
 import VehiclesPage from './pages/VehiclesPage';
 import RoutesPage from './pages/RoutesPage';
+import ShopsPage from './pages/ShopsPage';
 import StockPage from './pages/StockPage';
 import SalesPage from './pages/SalesPage';
 import ReportsPage from './pages/ReportsPage';
@@ -14,6 +15,7 @@ const DeliwheelsApp = () => {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/vehicles" element={<VehiclesPage />} />
         <Route path="/routes" element={<RoutesPage />} />
+        <Route path="/shops" element={<ShopsPage />} />
         <Route path="/stock" element={<StockPage />} />
         <Route path="/sales" element={<SalesPage />} />
         <Route path="/reports" element={<ReportsPage />} />
