@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import DeliwheelsLayout from "../components/DeliwheelsLayout";
 import StockStats from "../components/StockStats";
 import StockFilterBar from "../components/StockFilterBar";
@@ -9,6 +9,7 @@ import Button from "@shared/components/ui/Button";
 import { Plus } from "lucide-react";
 import { useDeliwheels } from "../context/DeliwheelsContext";
 import { useGlobal } from "../../nexo/context/GlobalContext";
+import api from "@/services/api";
 
 const StockPage = () => {
   const {
@@ -30,9 +31,8 @@ const StockPage = () => {
     fetchStockLogs,
   } = useDeliwheels();
   const { products } = useGlobal();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [filterVehicle, setFilterVehicle] = useState("all");
-  const [filterProduct, setFilterProduct] = useState("");
   const [filterFromDate, setFilterFromDate] = useState("");
   const [filterToDate, setFilterToDate] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -52,13 +52,12 @@ const StockPage = () => {
 
   const hasCompleteDateRange = !!filterFromDate && !!filterToDate;
   const hasServerFilter =
-    filterVehicle !== "all" || !!filterProduct || hasCompleteDateRange;
+    filterVehicle !== "all" || hasCompleteDateRange;
 
   useEffect(() => {
     if (!stockLoaded) return;
     const filters = {};
     if (filterVehicle !== "all") filters.vehicleUid = filterVehicle;
-    if (filterProduct) filters.productUid = filterProduct;
     if (hasCompleteDateRange) {
       filters.fromDate = filterFromDate;
       filters.toDate = filterToDate;
@@ -67,32 +66,59 @@ const StockPage = () => {
   }, [
     hasCompleteDateRange,
     filterVehicle,
-    filterProduct,
     filterFromDate,
     filterToDate,
     searchStock,
   ]);
 
   const filteredStock = stock.filter((s) => {
-    const term = searchTerm.toLowerCase();
-    if (!term) return true;
-    return (s.product_name || "").toLowerCase().includes(term);
+    if (filterStatus === "in_progress") return !s.is_delivery_complete;
+    if (filterStatus === "done") return !!s.is_delivery_complete;
+    return true;
   });
 
+  // Group individual stock entries by vehicle + date → one row per delivery day
+  const groupedDeliveries = useMemo(() => {
+    const groups = new Map();
+    filteredStock.forEach((s) => {
+      const key = `${s.vehicle_uid}__${s.loaded_date}`;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          key,
+          vehicle_uid: s.vehicle_uid,
+          vehicle_number: s.vehicle_number,
+          loaded_date: s.loaded_date,
+          is_delivery_complete: true,
+          entries: [],
+          totalQty: 0,
+          deliveredQty: 0,
+          remainingQty: 0,
+        });
+      }
+      const g = groups.get(key);
+      g.entries.push(s);
+      const qty = s.quantity || 0;
+      const rem = s.remaining_quantity ?? qty;
+      g.totalQty += qty;
+      g.remainingQty += rem;
+      g.deliveredQty += Math.max(0, qty - rem);
+      if (!s.is_delivery_complete) g.is_delivery_complete = false;
+    });
+    return Array.from(groups.values())
+      .sort((a, b) => b.loaded_date.localeCompare(a.loaded_date));
+  }, [filteredStock]);
+
   const hasActiveFilter =
-    !!searchTerm ||
+    filterStatus !== "all" ||
     filterVehicle !== "all" ||
-    !!filterProduct ||
     !!filterFromDate ||
     !!filterToDate;
   const showResults = stockLoaded;
   const visibleStock = showResults ? filteredStock : [];
-  const totalLoaded = visibleStock.reduce((sum, s) => sum + s.quantity, 0);
 
   const clearFilters = () => {
-    setSearchTerm("");
+    setFilterStatus("all");
     setFilterVehicle("all");
-    setFilterProduct("");
     setFilterFromDate("");
     setFilterToDate("");
   };
@@ -108,14 +134,25 @@ const StockPage = () => {
   };
 
   const handleViewLogs = useCallback(
-    async (entry) => {
-      setLogsEntry(entry);
+    async (delivery) => {
+      setLogsEntry(delivery);
       setLogs([]);
       setLogsError(null);
       setIsLoadingLogs(true);
       try {
-        const data = await fetchStockLogs(entry.stock_uid);
-        setLogs(data || []);
+        const allLogsArrays = await Promise.all(
+          delivery.entries.map((entry) =>
+            fetchStockLogs(entry.stock_uid)
+              .then((data) =>
+                (data || []).map((log) => ({ ...log, product_name: entry.product_name }))
+              )
+              .catch(() => [])
+          )
+        );
+        const combined = allLogsArrays
+          .flat()
+          .sort((a, b) => new Date(b.saleDate || 0) - new Date(a.saleDate || 0));
+        setLogs(combined);
       } catch (e) {
         setLogsError("Failed to load delivery logs. Please try again.");
       } finally {
@@ -129,6 +166,23 @@ const StockPage = () => {
     setLogsEntry(null);
     setLogs([]);
     setLogsError(null);
+  };
+
+  const handleCompleteDelivery = async (vehicleUid) => {
+    try {
+      await api.put(`/api/v1/deliwheels/stock-added/vehicle/${vehicleUid}/complete-delivery`);
+      // Refresh stock so grouped rows update their status
+      const filters = {};
+      if (filterVehicle !== "all") filters.vehicleUid = filterVehicle;
+      if (filterFromDate && filterToDate) {
+        filters.fromDate = filterFromDate;
+        filters.toDate = filterToDate;
+      }
+      await searchStock(filters);
+      handleCloseLogs();
+    } catch (e) {
+      alert("Failed to complete delivery: " + (e?.response?.data?.message ?? e?.message ?? "Unknown error"));
+    }
   };
 
   return (
@@ -168,22 +222,20 @@ const StockPage = () => {
 
       <StockStats
         showResults={showResults}
-        entryCount={visibleStock.length}
-        totalLoaded={totalLoaded}
+        entryCount={groupedDeliveries.length}
+        inProgressCount={groupedDeliveries.filter((d) => !d.is_delivery_complete).length}
+        doneCount={groupedDeliveries.filter((d) => d.is_delivery_complete).length}
       />
 
       <StockFilterBar
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        filterProduct={filterProduct}
-        setFilterProduct={setFilterProduct}
+        filterStatus={filterStatus}
+        setFilterStatus={setFilterStatus}
         filterVehicle={filterVehicle}
         setFilterVehicle={setFilterVehicle}
         filterFromDate={filterFromDate}
         setFilterFromDate={setFilterFromDate}
         filterToDate={filterToDate}
         setFilterToDate={setFilterToDate}
-        products={products}
         vehicles={vehicles}
         hasActiveFilter={hasActiveFilter}
         onClear={clearFilters}
@@ -191,13 +243,11 @@ const StockPage = () => {
 
       <StockTable
         showResults={showResults}
-        stock={stock}
-        visibleStock={visibleStock}
+        deliveries={groupedDeliveries}
         stockLoaded={stockLoaded}
         isLoadingStock={isLoadingStock}
         stockHasMore={stockHasMore}
         onLoadMore={fetchStock}
-        onEditEntry={handleEditClick}
         onViewLogs={handleViewLogs}
       />
 
@@ -214,11 +264,13 @@ const StockPage = () => {
       />
 
       <StockDetailsModal
-        entry={logsEntry}
+        delivery={logsEntry}
         logs={logs}
         loading={isLoadingLogs}
         error={logsError}
         onClose={handleCloseLogs}
+        products={products}
+        onCompleteDelivery={handleCompleteDelivery}
       />
     </DeliwheelsLayout>
   );

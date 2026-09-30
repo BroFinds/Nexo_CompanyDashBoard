@@ -53,9 +53,11 @@ const SalesStats = ({
   totalRevenue,
   paidRevenue,
   pendingRevenue,
+  creditRevenue,
   totalOrders,
   paidCount,
   pendingCount,
+  creditCount,
   hasMore,
 }) => (
   <>
@@ -87,6 +89,14 @@ const SalesStats = ({
         count={pendingCount}
         color="#b45309"
         delayClass="delay-200"
+        showResults={showResults}
+      />
+      <StatCard
+        label="Credit"
+        value={creditRevenue}
+        count={creditCount}
+        color="#7c3aed"
+        delayClass="delay-300"
         showResults={showResults}
       />
     </div>

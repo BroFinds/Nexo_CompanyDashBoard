@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import DeliwheelsLayout from "../components/DeliwheelsLayout";
 import VehicleSection from "../components/VehicleSection";
 import VehicleFormModal from "./modals/vehicles/VehicleFormModal";
@@ -9,8 +9,10 @@ import Skeleton from "@shared/components/ui/Skeleton";
 import { Search, Plus } from "lucide-react";
 import { useDeliwheels } from "../context/DeliwheelsContext";
 import { useGlobal } from "../../nexo/context/GlobalContext";
+import { useStock } from "../context/useStock";
 import useInfiniteScroll from "@shared/hooks/useInfiniteScroll";
 import InfiniteScrollLoader from "@shared/components/ui/InfiniteScrollLoader";
+import api from "@/services/api";
 
 const VehiclesPage = () => {
   const {
@@ -28,15 +30,20 @@ const VehiclesPage = () => {
     setVehicleStatus,
   } = useDeliwheels();
   const { employees, employeesLoaded, fetchEmployees } = useGlobal();
+  const { stock, searchStock } = useStock();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState(null);
 
+  const today = new Date().toISOString().split("T")[0];
+
   useEffect(() => {
     if (!vehiclesLoaded) fetchVehicles();
     if (!routesLoaded) fetchRoutes();
     if (!employeesLoaded) fetchEmployees();
+    // Fetch today's stock to determine which vehicles have active deliveries
+    searchStock({ fromDate: today, toDate: today });
   }, [
     vehiclesLoaded,
     routesLoaded,
@@ -45,6 +52,37 @@ const VehiclesPage = () => {
     fetchRoutes,
     fetchEmployees,
   ]);
+
+  // Build a per-vehicle delivery status map from today's stock
+  const deliveryStatusMap = useMemo(() => {
+    const map = {};
+    stock.forEach((s) => {
+      if (s.loaded_date !== today) return;
+      const vid = s.vehicle_uid;
+      if (!map[vid]) {
+        map[vid] = {
+          hasActiveDelivery: true,
+          isComplete: true,
+          totalQty: 0,
+          remainingQty: 0,
+        };
+      }
+      if (!s.is_delivery_complete) map[vid].isComplete = false;
+      map[vid].totalQty += s.quantity || 0;
+      map[vid].remainingQty += s.remaining_quantity ?? s.quantity ?? 0;
+    });
+    return map;
+  }, [stock, today]);
+
+  const handleCompleteDelivery = async (vehicle) => {
+    if (!window.confirm(`Mark delivery as complete for ${vehicle.registration || vehicle.vehicle_uid}?`)) return;
+    try {
+      await api.put(`/api/v1/deliwheels/stock-added/vehicle/${vehicle.vehicle_uid}/complete-delivery`);
+      searchStock({ fromDate: today, toDate: today });
+    } catch (e) {
+      alert("Failed to complete delivery: " + (e?.response?.data?.message ?? e?.message ?? "Unknown error"));
+    }
+  };
 
   const sentinelRef = useInfiniteScroll({
     hasMore: vehiclesHasMore,
@@ -191,6 +229,8 @@ const VehiclesPage = () => {
             emptyMessage="No active vehicles found."
             onCardClick={setSelectedVehicle}
             getDriverName={getDriverName}
+            deliveryStatusMap={deliveryStatusMap}
+            onCompleteDelivery={handleCompleteDelivery}
             style={{ marginBottom: "var(--spacing-xl)" }}
           />
 
@@ -200,7 +240,6 @@ const VehiclesPage = () => {
             emptyMessage="No inactive vehicles."
             onCardClick={setSelectedVehicle}
             getDriverName={getDriverName}
-
           />
 
           <div ref={sentinelRef} style={{ height: "1px" }} />

@@ -180,19 +180,32 @@ const EmptyChart = ({ height = 180 }) => (
 
 const ReportsPage = () => {
   const {
-    vehicles, stock, routes, sales,
-    fetchVehicles, fetchStock, fetchRoutes, fetchSales,
-    isLoadingSales,
+    vehicles, routes,
+    fetchVehicles, fetchRoutes,
+    fetchAllSales, fetchAllStock,
   } = useDeliwheels();
 
   const [rangeKey, setRangeKey] = useState('30d');
+  // Reports needs ALL data — use local state populated via fetchAll helpers
+  const [sales, setSales] = useState([]);
+  const [stock, setStock] = useState([]);
+  const [isLoadingSales, setIsLoadingSales] = useState(true);
 
   useEffect(() => {
     fetchVehicles();
-    fetchStock();
     fetchRoutes();
-    fetchSales();
-  }, [fetchVehicles, fetchStock, fetchRoutes, fetchSales]);
+    setIsLoadingSales(true);
+    Promise.all([
+      fetchAllSales ? fetchAllSales({}) : Promise.resolve([]),
+      fetchAllStock ? fetchAllStock({}) : Promise.resolve([]),
+    ])
+      .then(([allSales, allStock]) => {
+        setSales(allSales || []);
+        setStock(allStock || []);
+      })
+      .catch((e) => console.error('Reports fetchAll:', e))
+      .finally(() => setIsLoadingSales(false));
+  }, [fetchVehicles, fetchRoutes, fetchAllSales, fetchAllStock]);
 
   const range = RANGES.find(r => r.key === rangeKey) || RANGES[1];
 

@@ -107,6 +107,27 @@ export const useSales = () => {
     [fetchSales],
   );
 
+  const fetchAllSales = useCallback(async (filters = {}) => {
+    const session = getSession();
+    const params = {};
+    if (filters.vehicleUid) params.vehicleUid = filters.vehicleUid;
+    if (filters.fromDate) params.fromDate = filters.fromDate;
+    if (filters.toDate) params.toDate = filters.toDate;
+    const all = [];
+    let page = 0;
+    let last = false;
+    while (!last) {
+      const result = await fetchPage(
+        `/api/v1/deliwheels/sales/company/${session.companyId}`,
+        { page, params },
+      );
+      all.push(...result.items.map(mapSale));
+      last = result.last;
+      page++;
+    }
+    return all;
+  }, []);
+
   const getSale = useCallback(async (saleUid) => {
     const session = getSession();
     const { data } = await api.get(
@@ -122,6 +143,7 @@ export const useSales = () => {
     salesLoaded,
     fetchSales,
     searchSales,
+    fetchAllSales,
     getSale,
   };
 };

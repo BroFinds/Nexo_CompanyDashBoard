@@ -59,48 +59,28 @@ const SalesTable = ({
   return (
     <Card padding="none">
       {!showResults ? (
-        <div
-          style={{
-            padding: "60px 24px",
-            textAlign: "center",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "12px",
-          }}
-        >
-          <div
-            style={{
-              width: "56px",
-              height: "56px",
-              borderRadius: "50%",
-              background: "var(--bg-body)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Filter size={24} style={{ color: "var(--color-text-subtle)" }} />
-          </div>
-          <h3
-            style={{
-              fontSize: "1rem",
-              fontWeight: "700",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            Pick a filter to load sales
-          </h3>
-          <p
-            style={{
-              color: "var(--color-text-subtle)",
-              fontSize: "0.9rem",
-              maxWidth: "420px",
-            }}
-          >
-            Choose a <strong>vehicle</strong> or a <strong>date range</strong>{" "}
-            above to load matching sales. Nothing is loaded by default.
-          </p>
+        /* Loading skeleton shown while initial fetch is in progress */
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid var(--border-subtle)", backgroundColor: "var(--bg-body)" }}>
+                {["Invoice", "Shop / Owner", "Vehicle", "Grand Total", "Date", "Status", "Mode", ""].map((h) => (
+                  <th key={h} style={{ padding: "14px 16px", textAlign: "left", fontWeight: "600", fontSize: "0.8rem", color: "var(--color-text-subtle)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <tr key={i} style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+                  {[120, 140, 90, 70, 80, 60, 60, 50].map((w, j) => (
+                    <td key={j} style={{ padding: "14px 16px" }}>
+                      <Skeleton width={`${w}px`} height="16px" />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div

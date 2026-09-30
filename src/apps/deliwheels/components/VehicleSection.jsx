@@ -7,6 +7,8 @@ const VehicleSection = ({
   emptyMessage,
   onCardClick,
   getDriverName,
+  deliveryStatusMap,
+  onCompleteDelivery,
   style,
 }) => {
   return (
@@ -47,6 +49,8 @@ const VehicleSection = ({
               vehicle={v}
               driverName={getDriverName(v)}
               onClick={() => onCardClick(v)}
+              deliveryStatus={deliveryStatusMap?.[v.vehicle_uid]}
+              onCompleteDelivery={onCompleteDelivery}
             />
           </div>
         ))}

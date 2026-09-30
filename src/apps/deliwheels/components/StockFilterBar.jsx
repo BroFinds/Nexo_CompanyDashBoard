@@ -1,132 +1,91 @@
 import React from "react";
 import Card from "@shared/components/ui/Card";
-import Badge from "@shared/components/ui/Badge";
 import Button from "@shared/components/ui/Button";
 import SearchableSelect from "@shared/components/ui/SearchableSelect";
-import { Search, Filter, X } from "lucide-react";
+import { X, Truck } from "lucide-react";
+
+const STATUS_TABS = [
+  { value: "all", label: "All" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "done", label: "Done" },
+];
 
 const StockFilterBar = ({
-  searchTerm,
-  setSearchTerm,
-  filterProduct,
-  setFilterProduct,
+  filterStatus,
+  setFilterStatus,
   filterVehicle,
   setFilterVehicle,
   filterFromDate,
   setFilterFromDate,
   filterToDate,
   setFilterToDate,
-  products,
   vehicles,
   hasActiveFilter,
   onClear,
 }) => (
   <Card padding="md" style={{ marginBottom: "var(--spacing-lg)" }}>
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-      <Filter size={16} style={{ color: "var(--color-text-subtle)" }} />
-      <span style={{ fontWeight: "600", fontSize: "0.9rem" }}>
-        Search & Filter
-      </span>
-      {hasActiveFilter && (
-        <Badge variant="primary" style={{ fontSize: "0.7rem" }}>
-          Active
-        </Badge>
-      )}
-    </div>
+    <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+      {/* Status tabs */}
+      <div style={{ display: "inline-flex", gap: "4px", padding: "4px", backgroundColor: "var(--bg-body)", borderRadius: "10px", border: "1px solid var(--border-subtle)" }}>
+        {STATUS_TABS.map((tab) => (
+          <button
+            key={tab.value}
+            onClick={() => setFilterStatus(tab.value)}
+            style={{
+              padding: "6px 16px", fontSize: "0.85rem", fontWeight: 600, cursor: "pointer",
+              border: "none", borderRadius: "7px",
+              background: filterStatus === tab.value ? "var(--color-surface, white)" : "transparent",
+              color: filterStatus === tab.value ? "var(--color-text)" : "var(--color-text-subtle)",
+              boxShadow: filterStatus === tab.value ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
+              transition: "all 0.15s ease",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-    <div
-      style={{
-        marginTop: "var(--spacing-md)",
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-        gap: "var(--spacing-md)",
-      }}
-    >
-      <div style={{ position: "relative" }}>
-        <Search
-          size={16}
-          style={{
-            position: "absolute",
-            left: "12px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            color: "var(--color-text-subtle)",
-          }}
-        />
-        <input
-          type="text"
-          placeholder="Search product name..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px 10px 10px 36px",
-            borderRadius: "var(--radius-sm)",
-            border: "1px solid var(--border-subtle)",
-            outline: "none",
-            fontSize: "var(--text-sm)",
-          }}
+      {/* Vehicle filter */}
+      <div style={{ flex: "1", minWidth: "180px" }}>
+        <SearchableSelect
+          options={[
+            { value: "all", label: "All Vehicles" },
+            ...vehicles.map((v) => ({
+              value: v.vehicle_uid,
+              label: v.registration,
+              sub: `${v.model || ""}${v.driver ? ` · ${v.driver}` : ""}`,
+            })),
+          ]}
+          value={filterVehicle}
+          onChange={setFilterVehicle}
+          placeholder="All Vehicles"
+          noResultsText="No vehicles found"
         />
       </div>
 
-      <SearchableSelect
-        options={[
-          { value: "", label: "All Products" },
-          ...products.map((p) => ({
-            value: p.product_uid,
-            label: p.product_name,
-            sub: p.product_code,
-          })),
-        ]}
-        value={filterProduct}
-        onChange={setFilterProduct}
-        placeholder="All Products"
-        noResultsText="No products found"
-      />
-
-      <SearchableSelect
-        options={[
-          { value: "all", label: "All Vehicles" },
-          ...vehicles.map((v) => ({
-            value: v.vehicle_uid,
-            label: v.registration,
-            sub: `${v.model}${v.driver ? ` (${v.driver})` : ""}`,
-          })),
-        ]}
-        value={filterVehicle}
-        onChange={setFilterVehicle}
-        placeholder="All Vehicles"
-        noResultsText="No vehicles found"
-      />
-
+      {/* Date range */}
       <input
         type="date"
         value={filterFromDate}
         onChange={(e) => setFilterFromDate(e.target.value)}
-        placeholder="From date"
         title="From date"
         style={{
-          padding: "10px 12px",
-          borderRadius: "var(--radius-sm)",
-          border: "1px solid var(--border-subtle)",
-          outline: "none",
+          padding: "10px 12px", borderRadius: "var(--radius-sm)",
+          border: "1px solid var(--border-subtle)", outline: "none",
           fontSize: "var(--text-sm)",
           fontWeight: filterFromDate ? "600" : "400",
           color: filterFromDate ? "var(--color-primary)" : "inherit",
         }}
       />
-
       <input
         type="date"
         value={filterToDate}
         onChange={(e) => setFilterToDate(e.target.value)}
-        placeholder="To date"
         title="To date"
         style={{
-          padding: "10px 12px",
-          borderRadius: "var(--radius-sm)",
-          border: "1px solid var(--border-subtle)",
-          outline: "none",
+          padding: "10px 12px", borderRadius: "var(--radius-sm)",
+          border: "1px solid var(--border-subtle)", outline: "none",
           fontSize: "var(--text-sm)",
           fontWeight: filterToDate ? "600" : "400",
           color: filterToDate ? "var(--color-primary)" : "inherit",
@@ -137,14 +96,9 @@ const StockFilterBar = ({
         <Button
           variant="secondary"
           onClick={onClear}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "6px",
-          }}
+          style={{ display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap" }}
         >
-          <X size={14} /> Clear filters
+          <X size={14} /> Clear
         </Button>
       )}
     </div>

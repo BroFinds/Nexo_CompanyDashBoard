@@ -4,6 +4,7 @@ import { useRoutes } from "./useRoutes";
 import { useStock } from "./useStock";
 import { useSales } from "./useSales";
 import { useShops } from "./useShops";
+import { useReturnedStock } from "./useReturnedStock";
 
 const DeliwheelsContext = createContext();
 
@@ -13,6 +14,7 @@ export const DeliwheelsProvider = ({ children }) => {
   const stockApi = useStock();
   const salesApi = useSales();
   const shopsApi = useShops();
+  const returnsApi = useReturnedStock();
 
   return (
     <DeliwheelsContext.Provider
@@ -22,6 +24,7 @@ export const DeliwheelsProvider = ({ children }) => {
         ...stockApi,
         ...salesApi,
         ...shopsApi,
+        ...returnsApi,
       }}
     >
       {children}

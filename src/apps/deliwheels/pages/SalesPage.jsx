@@ -109,6 +109,13 @@ const SalesPage = () => {
   const paidCount = visibleSales.filter(isPaid).length;
   const pendingCount = totalOrders - paidCount;
 
+  const isCredit = (s) => (s.payment_mode_text || '').toUpperCase().includes('CREDIT');
+  const creditRevenue = visibleSales.reduce(
+    (sum, s) => (isCredit(s) ? sum + Number(s.grand_total || 0) : sum),
+    0,
+  );
+  const creditCount = visibleSales.filter(isCredit).length;
+
   const clearFilters = () => {
     setSearchTerm("");
     setFilterVehicle("all");
@@ -150,9 +157,11 @@ const SalesPage = () => {
         totalRevenue={totalRevenue}
         paidRevenue={paidRevenue}
         pendingRevenue={pendingRevenue}
+        creditRevenue={creditRevenue}
         totalOrders={totalOrders}
         paidCount={paidCount}
         pendingCount={pendingCount}
+        creditCount={creditCount}
         hasMore={salesHasMore}
       />
 

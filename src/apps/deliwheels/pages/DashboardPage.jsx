@@ -57,11 +57,11 @@ const DashboardPage = () => {
   );
   const pendingAmount = pendingPayments.reduce((sum, s) => sum + Number(s.grand_total || 0), 0);
 
-  // Stock loaded today — sum of total_quantity for stock entries created today
+  // Stock loaded today — sum of quantity for stock entries loaded today
   const todaysLoadedUnits = useMemo(
     () => stock
-      .filter(s => isToday(s.stock_added_date || s.created_at || s.loaded_date))
-      .reduce((sum, s) => sum + Number(s.total_quantity || s.quantity || 0), 0),
+      .filter(s => isToday(s.loaded_date || s.created_at))
+      .reduce((sum, s) => sum + Number(s.quantity || 0), 0),
     [stock],
   );
 
@@ -93,7 +93,7 @@ const DashboardPage = () => {
 
   const stats = [
     {
-      label: "Deliveries Today",
+      label: "Sales Today",
       value: todaysSales.length,
       sub: todaysSales.length === 0 ? 'No deliveries yet' : `${sales.length} all-time`,
       icon: PackageCheck,
@@ -101,7 +101,7 @@ const DashboardPage = () => {
       bg: 'linear-gradient(135deg, #d1fae5, #a7f3d0)',
     },
     {
-      label: "Stock Loaded Today",
+      label: "Loaded Today",
       value: todaysLoadedUnits,
       sub: stock.filter(s => isToday(s.stock_added_date || s.created_at || s.loaded_date)).length + ' loading entries',
       icon: Package,

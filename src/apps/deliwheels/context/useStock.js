@@ -17,6 +17,7 @@ export const mapStockAdded = (s) => ({
   delivered_quantity: parseFloat(s.deliveredQuantity ?? s.delivered_quantity ?? 0) || 0,
   remaining_quantity: parseFloat(s.remainingQuantity ?? s.remaining_quantity ?? s.totalQuantity ?? s.total_quantity ?? s.quantity ?? 0) || 0,
   loaded_date: (s.stockAddedDate || s.stock_added_date || s.createdAt || "").split("T")[0],
+  is_delivery_complete: !!(s.isDeliveryComplete ?? s.is_delivery_complete ?? false),
   created_at: s.createdAt || "",
   updated_at: s.updatedAt || "",
 });
@@ -87,6 +88,28 @@ export const useStock = () => {
     await fetchStock();
   }, [fetchStock]);
 
+  const fetchAllStock = useCallback(async (filters = {}) => {
+    const session = getSession();
+    const params = {};
+    if (filters.vehicleUid) params.vehicleUid = filters.vehicleUid;
+    if (filters.productUid) params.productUid = filters.productUid;
+    if (filters.fromDate) params.fromDate = filters.fromDate;
+    if (filters.toDate) params.toDate = filters.toDate;
+    const all = [];
+    let page = 0;
+    let last = false;
+    while (!last) {
+      const result = await fetchPage(
+        `/api/v1/deliwheels/stock-added/company/${session.companyId}`,
+        { page, params },
+      );
+      all.push(...result.items.map(mapStockAdded));
+      last = result.last;
+      page++;
+    }
+    return all;
+  }, []);
+
   const addStockLoading = useCallback(
     async (productUid, quantity, vehicleUid) => {
       const session = getSession();
@@ -144,6 +167,7 @@ export const useStock = () => {
     fetchStock,
     searchStock,
     refreshStock,
+    fetchAllStock,
     addStockLoading,
     updateStock,
     fetchStockLogs,
