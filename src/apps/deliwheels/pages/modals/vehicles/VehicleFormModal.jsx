@@ -77,8 +77,12 @@ const VehicleFormModal = ({
   };
 
   const handleSave = async () => {
-    if (!formData.registration || !formData.model) {
+    if (!formData.registration?.trim() || !formData.model?.trim()) {
       setFormError("Registration and model are required.");
+      return;
+    }
+    if (!formData.employee_uid) {
+      setFormError("Please assign a driver to this vehicle.");
       return;
     }
     if (!isEditMode && (!formData.username || !formData.password)) {
@@ -214,7 +218,7 @@ const VehicleFormModal = ({
           </div>
         </div>
         <div>
-          <label style={labelStyle}>Driver</label>
+          <label style={labelStyle}>Driver *</label>
           <select
             name="employee_uid"
             value={formData.employee_uid || ""}

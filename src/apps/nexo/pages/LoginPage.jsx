@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import Card from '@shared/components/ui/Card';
 import Input from '@shared/components/ui/Input';
 import Button from '@shared/components/ui/Button';
@@ -13,6 +14,7 @@ const LoginPage = () => {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -81,14 +83,25 @@ const LoginPage = () => {
             </div>
             
             <div style={{ marginBottom: '24px' }}>
-              <Input 
-                id="password" 
-                type="password" 
-                label="Password" 
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                label="Password"
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
                 icon={<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>}
+                suffix={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-subtle)', display: 'flex', alignItems: 'center', padding: 0 }}
+                    tabIndex={-1}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                }
                 required
               />
             </div>

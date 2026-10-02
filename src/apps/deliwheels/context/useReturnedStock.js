@@ -5,6 +5,7 @@ export const mapReturnedStock = (r) => ({
   returned_stock_uid: r.returnedStockUid || r.returned_stock_uid || "",
   product_uid: r.productUid || r.product_uid || "",
   product_name: r.productName || r.product_name || "",
+  shop_uid: r.shopUid || r.shop_uid || "",
   vehicle_uid: r.vehicleUid || r.vehicle_uid || "",
   vehicle_number: r.vehicleNumber || r.vehicle_number || "",
   company_uid: r.companyUid || r.company_uid || "",
@@ -70,6 +71,27 @@ export const useReturnedStock = () => {
     [fetchReturns],
   );
 
+  const fetchAllReturns = useCallback(async (filters = {}) => {
+    const session = getSession();
+    const params = {};
+    if (filters.vehicleUid) params.vehicleUid = filters.vehicleUid;
+    if (filters.fromDate) params.fromDate = filters.fromDate;
+    if (filters.toDate) params.toDate = filters.toDate;
+    const all = [];
+    let page = 0;
+    let last = false;
+    while (!last) {
+      const result = await fetchPage(
+        `/api/v1/deliwheels/returned-stock/company/${session.companyId}`,
+        { page, params },
+      );
+      all.push(...result.items.map(mapReturnedStock));
+      last = result.last;
+      page++;
+    }
+    return all;
+  }, []);
+
   return {
     returnedStock,
     isLoadingReturns,
@@ -77,5 +99,6 @@ export const useReturnedStock = () => {
     returnsLoaded,
     fetchReturns,
     searchReturns,
+    fetchAllReturns,
   };
 };

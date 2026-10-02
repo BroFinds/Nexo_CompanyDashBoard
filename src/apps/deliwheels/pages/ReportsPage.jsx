@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import DeliwheelsLayout from '../components/DeliwheelsLayout';
 import Card from '@shared/components/ui/Card';
 import Skeleton from '@shared/components/ui/Skeleton';
@@ -186,12 +186,16 @@ const ReportsPage = () => {
   } = useDeliwheels();
 
   const [rangeKey, setRangeKey] = useState('30d');
-  // Reports needs ALL data — use local state populated via fetchAll helpers
   const [sales, setSales] = useState([]);
   const [stock, setStock] = useState([]);
   const [isLoadingSales, setIsLoadingSales] = useState(true);
+  const fetchInitiatedRef = useRef(false);
 
   useEffect(() => {
+    if (fetchInitiatedRef.current) return;
+    fetchInitiatedRef.current = true;
+
+    let cancelled = false;
     fetchVehicles();
     fetchRoutes();
     setIsLoadingSales(true);
@@ -200,11 +204,14 @@ const ReportsPage = () => {
       fetchAllStock ? fetchAllStock({}) : Promise.resolve([]),
     ])
       .then(([allSales, allStock]) => {
+        if (cancelled) return;
         setSales(allSales || []);
         setStock(allStock || []);
       })
-      .catch((e) => console.error('Reports fetchAll:', e))
-      .finally(() => setIsLoadingSales(false));
+      .catch((e) => { if (!cancelled) console.error('Reports fetchAll:', e); })
+      .finally(() => { if (!cancelled) setIsLoadingSales(false); });
+
+    return () => { cancelled = true; };
   }, [fetchVehicles, fetchRoutes, fetchAllSales, fetchAllStock]);
 
   const range = RANGES.find(r => r.key === rangeKey) || RANGES[1];

@@ -159,6 +159,11 @@ export const useStock = () => {
     return data;
   }, []);
 
+  const deleteStockEntry = useCallback(async (stockUid) => {
+    await api.delete(`/api/v1/deliwheels/stock-added/${stockUid}`);
+    setStock((prev) => prev.filter((s) => s.stock_uid !== stockUid));
+  }, []);
+
   return {
     stock,
     isLoadingStock,
@@ -171,5 +176,6 @@ export const useStock = () => {
     addStockLoading,
     updateStock,
     fetchStockLogs,
+    deleteStockEntry,
   };
 };

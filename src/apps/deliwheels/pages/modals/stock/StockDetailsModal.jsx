@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Modal from "@shared/components/ui/Modal";
 import Button from "@shared/components/ui/Button";
 import Skeleton from "@shared/components/ui/Skeleton";
-import { Truck, Calendar, Package, CheckCircle, Clock, IndianRupee } from "lucide-react";
+import { Truck, Calendar, Package, CheckCircle, Clock, IndianRupee, Trash2 } from "lucide-react";
 
 const formatMoney = (n) =>
   Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -21,9 +21,20 @@ const formatTime = (raw) => {
   return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata" });
 };
 
-const StockDetailsModal = ({ delivery, logs, loading, error, onClose, products, onCompleteDelivery }) => {
+const StockDetailsModal = ({ delivery, logs, loading, error, onClose, products, onCompleteDelivery, onDeleteDelivery }) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
+  useEffect(() => {
+    setShowDeleteConfirm(false);
+    setIsDeleting(false);
+    setDeleteError("");
+    setShowConfirm(false);
+    setIsCompleting(false);
+  }, [delivery]);
 
   if (!delivery) return null;
 
@@ -220,6 +231,51 @@ const StockDetailsModal = ({ delivery, logs, loading, error, onClose, products, 
             )}
           </div>
         </div>
+
+        {/* Delete delivery */}
+        {onDeleteDelivery && (
+          <div>
+            {showDeleteConfirm ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "var(--radius-sm)", padding: "10px 14px", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#dc2626" }}>
+                  Delete this entire delivery? This cannot be undone.
+                </span>
+                <button
+                  onClick={async () => {
+                    setIsDeleting(true);
+                    setDeleteError("");
+                    try {
+                      await onDeleteDelivery(delivery);
+                    } catch (e) {
+                      setDeleteError(e?.response?.data?.message ?? "Failed to delete delivery.");
+                      setIsDeleting(false);
+                      setShowDeleteConfirm(false);
+                    }
+                  }}
+                  disabled={isDeleting}
+                  style={{ padding: "6px 14px", borderRadius: "var(--radius-sm)", fontSize: "0.82rem", fontWeight: "700", background: "#dc2626", color: "#fff", border: "none", cursor: isDeleting ? "not-allowed" : "pointer", opacity: isDeleting ? 0.6 : 1 }}
+                >
+                  {isDeleting ? "Deleting…" : "Yes, Delete"}
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
+                  style={{ padding: "6px 12px", borderRadius: "var(--radius-sm)", fontSize: "0.82rem", fontWeight: "600", background: "transparent", color: "var(--color-text-subtle)", border: "1px solid var(--border-subtle)", cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => { setShowDeleteConfirm(true); setDeleteError(""); }}
+                style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "8px 14px", borderRadius: "var(--radius-sm)", fontSize: "0.82rem", fontWeight: "600", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", cursor: "pointer" }}
+              >
+                <Trash2 size={14} /> Delete Delivery
+              </button>
+            )}
+            {deleteError && <p style={{ marginTop: "6px", fontSize: "0.8rem", color: "#dc2626" }}>{deleteError}</p>}
+          </div>
+        )}
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
           {/* Complete Delivery — only shown when delivery is still in progress */}

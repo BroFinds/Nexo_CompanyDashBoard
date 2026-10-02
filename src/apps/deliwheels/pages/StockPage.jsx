@@ -29,6 +29,7 @@ const StockPage = () => {
     updateStock,
     assignRoute,
     fetchStockLogs,
+    deleteStockEntry,
   } = useDeliwheels();
   const { products } = useGlobal();
   const [filterStatus, setFilterStatus] = useState("all");
@@ -168,6 +169,17 @@ const StockPage = () => {
     setLogsError(null);
   };
 
+  const handleDeleteDelivery = async (delivery) => {
+    for (const entry of delivery.entries) {
+      await deleteStockEntry(entry.stock_uid);
+    }
+    handleCloseLogs();
+    const filters = {};
+    if (filterVehicle !== "all") filters.vehicleUid = filterVehicle;
+    if (filterFromDate && filterToDate) { filters.fromDate = filterFromDate; filters.toDate = filterToDate; }
+    await searchStock(filters);
+  };
+
   const handleCompleteDelivery = async (vehicleUid) => {
     try {
       await api.put(`/api/v1/deliwheels/stock-added/vehicle/${vehicleUid}/complete-delivery`);
@@ -271,6 +283,7 @@ const StockPage = () => {
         onClose={handleCloseLogs}
         products={products}
         onCompleteDelivery={handleCompleteDelivery}
+        onDeleteDelivery={handleDeleteDelivery}
       />
     </DeliwheelsLayout>
   );
