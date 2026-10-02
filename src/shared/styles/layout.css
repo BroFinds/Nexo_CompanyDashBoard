@@ -39,7 +39,7 @@
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
-    padding-bottom: var(--spacing-xl);
+    padding: 0 var(--spacing-lg) var(--spacing-xl);
 }
 
 /* Dashboard Grid */
@@ -138,7 +138,11 @@
 
     /* Padding adjustments */
     .main-content>main {
-        padding: var(--spacing-md);
+        padding: 0;
+    }
+
+    .content-container {
+        padding: 0 var(--spacing-md) 0;
     }
 
     /* Stack Modal Grids */

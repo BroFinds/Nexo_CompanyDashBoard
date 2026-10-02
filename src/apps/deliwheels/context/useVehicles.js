@@ -172,8 +172,12 @@ export const useVehicles = () => {
         createdBy: session.userId,
       });
       const mapped = mapVehicle(data);
-      setVehicles((prev) => [mapped, ...prev]);
-      return mapped;
+      const withUsername = {
+        ...mapped,
+        username: mapped.username || formData.username || "",
+      };
+      setVehicles((prev) => [withUsername, ...prev]);
+      return withUsername;
     } catch (e) {
       console.error("addVehicle:", e);
       throw e;

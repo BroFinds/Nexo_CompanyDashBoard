@@ -2,7 +2,8 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import NexoLayout from "../components/NexoLayout";
 import Card from "@shared/components/ui/Card";
 import { LayoutGrid, Activity, RefreshCw } from "lucide-react";
-import { getSession, pingService } from "@/services/api";
+import { pingService } from "@/services/api";
+import { useEnabledApps } from "@/shared/context/EnabledAppsContext";
 import { APP_BY_ID } from "../constants/apps";
 
 const STATUS_STYLE = {
@@ -13,9 +14,10 @@ const STATUS_STYLE = {
 };
 
 const ReportsPage = () => {
+  const { enabledApps } = useEnabledApps();
   // Stabilize the allocated-apps list so it doesn't get a new reference each render.
   // Key on a serialized form so the memo only changes when the actual list changes.
-  const enabledAppsKey = JSON.stringify(getSession()?.apps ?? []);
+  const enabledAppsKey = JSON.stringify(enabledApps);
   const baseModules = useMemo(() => {
     const ids = JSON.parse(enabledAppsKey);
     const list = [

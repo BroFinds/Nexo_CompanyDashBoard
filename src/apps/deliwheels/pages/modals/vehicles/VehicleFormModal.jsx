@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Modal from "@shared/components/ui/Modal";
 import Button from "@shared/components/ui/Button";
+import SearchableSelect from "@shared/components/ui/SearchableSelect";
 import { Eye, EyeOff } from "lucide-react";
 
 const EMPTY_VEHICLE = {
@@ -10,6 +11,7 @@ const EMPTY_VEHICLE = {
   is_active: true,
   driver: "Unassigned",
   employee_uid: "",
+  route_uid: "",
   username: "",
   password: "",
 };
@@ -36,6 +38,7 @@ const VehicleFormModal = ({
   onClose,
   initialVehicle,
   employees,
+  routes,
   onAdd,
   onUpdate,
   onSetStatus,
@@ -48,27 +51,41 @@ const VehicleFormModal = ({
   useEffect(() => {
     if (!isOpen) return;
     if (initialVehicle) {
+      const selectedEmployee = (employees || []).find(
+        (emp) => emp.employee_uid === initialVehicle.employee_uid,
+      );
+      const selectedEmployeeUid = selectedEmployee?.employee_uid || "";
+      const selectedEmployeeName = selectedEmployee?.name || initialVehicle.driver || "Unassigned";
+      const selectedRouteUid = initialVehicle.route_uid || "";
+
       setFormData({
+        ...EMPTY_VEHICLE,
         ...initialVehicle,
+        employee_uid: selectedEmployeeUid,
+        route_uid: selectedRouteUid,
+        driver: selectedEmployeeName,
         is_active: initialVehicle.status === "active",
       });
     } else {
-      setFormData({ ...EMPTY_VEHICLE });
+      const activeRoutes = (routes || []).filter((r) => r.status === "active");
+      const activeEmployees = (employees || []).filter((e) => e.is_active);
+      const defaultRoute = activeRoutes.length === 1 ? activeRoutes[0].route_uid : "";
+      const defaultEmployee = activeEmployees.length === 1 ? activeEmployees[0].employee_uid : "";
+      const defaultEmployeeName = activeEmployees.length === 1 ? activeEmployees[0].name : "Unassigned";
+      setFormData({
+        ...EMPTY_VEHICLE,
+        route_uid: defaultRoute,
+        employee_uid: defaultEmployee,
+        driver: defaultEmployeeName,
+      });
     }
     setFormError("");
     setShowPassword(false);
-  }, [isOpen, initialVehicle]);
+  }, [isOpen, initialVehicle, routes, employees]);
 
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
-    if (name === "employee_uid") {
-      const emp = (employees || []).find((em) => em.employee_uid === value);
-      setFormData((prev) => ({
-        ...prev,
-        employee_uid: value,
-        driver: emp?.name || "Unassigned",
-      }));
-    } else if (type === "checkbox") {
+    if (type === "checkbox") {
       setFormData((prev) => ({ ...prev, [name]: checked }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -76,13 +93,23 @@ const VehicleFormModal = ({
     if (formError) setFormError("");
   };
 
-  const handleSave = async () => {
-    if (!formData.registration?.trim() || !formData.model?.trim()) {
-      setFormError("Registration and model are required.");
-      return;
+  const handleSelectChange = (name, value) => {
+    if (name === "employee_uid") {
+      const emp = (employees || []).find((em) => em.employee_uid === value);
+      setFormData((prev) => ({
+        ...prev,
+        employee_uid: value,
+        driver: emp?.name || "Unassigned",
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
-    if (!formData.employee_uid) {
-      setFormError("Please assign a driver to this vehicle.");
+    if (formError) setFormError("");
+  };
+
+  const handleSave = async () => {
+    if (!formData.registration || !formData.model) {
+      setFormError("Registration and model are required.");
       return;
     }
     if (!isEditMode && (!formData.username || !formData.password)) {
@@ -217,26 +244,45 @@ const VehicleFormModal = ({
             </p>
           </div>
         </div>
-        <div>
-          <label style={labelStyle}>Driver *</label>
-          <select
-            name="employee_uid"
-            value={formData.employee_uid || ""}
-            onChange={handleFormChange}
-            style={fieldStyle}
-          >
-            <option value="">— Unassigned —</option>
-            {(employees || [])
-              .filter((e) => e.is_active)
-              .map((emp) => (
-                <option key={emp.employee_uid} value={emp.employee_uid}>
-                  {emp.name}
-                </option>
-              ))}
-          </select>
-          <p style={{ fontSize: "0.75rem", color: "var(--color-text-subtle)", marginTop: "4px" }}>
-            Route is assigned automatically when stock is loaded onto this vehicle.
-          </p>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "12px",
+          }}
+        >
+          <div>
+            <label style={labelStyle}>Driver</label>
+            <SearchableSelect
+              options={(employees || [])
+                .filter((e) => e.is_active)
+                .map((emp) => ({
+                  value: emp.employee_uid,
+                  label: emp.name,
+                  sub: emp.role || "Active employee",
+                }))}
+              value={formData.employee_uid || ""}
+              onChange={(val) => handleSelectChange("employee_uid", val)}
+              placeholder="Search driver..."
+              noResultsText="No drivers found"
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Assign Route</label>
+            <SearchableSelect
+              options={(routes || [])
+                .filter((r) => r.status === "active")
+                .map((r) => ({
+                  value: r.route_uid,
+                  label: `${r.origin} → ${r.destination}`,
+                  sub: r.route_code || "Active route",
+                }))}
+              value={formData.route_uid || ""}
+              onChange={(val) => handleSelectChange("route_uid", val)}
+              placeholder="Search route..."
+              noResultsText="No routes found"
+            />
+          </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <input

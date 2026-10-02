@@ -1,0 +1,898 @@
+/* =========================================
+   Novo Theme — Teal AI Workspace
+   Scoped via [data-app="novo"] attribute
+   ========================================= */
+
+[data-app="novo"] {
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-subtle: #dbeafe;
+  --border-focus: #2563eb;
+  --color-text-main: #111827;
+  --color-text-subtle: #475569;
+  --bg-body: #f8fbff;
+  --bg-surface: rgba(255, 255, 255, 0.92);
+  --border-color: rgba(37, 99, 235, 0.16);
+  --gradient-primary: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
+  --shadow-glow-primary: 0 12px 30px rgba(37, 99, 235, 0.18);
+  --shadow-soft: 0 8px 24px rgba(15, 23, 42, 0.08);
+
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fbff 0%, #eff6ff 100%);
+  color: var(--color-text-main);
+  font-family: var(--font-sans);
+}
+
+[data-app="novo"] .novo-shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+[data-app="novo"] .novo-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(16px);
+}
+
+[data-app="novo"] .novo-card--hero {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr;
+  gap: 24px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(238,242,255,0.96) 100%);
+}
+
+[data-app="novo"] .novo-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary-hover);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 12px;
+}
+
+[data-app="novo"] .novo-title {
+  font-size: clamp(1.4rem, 2vw, 2.1rem);
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+}
+
+[data-app="novo"] .novo-subtitle,
+[data-app="novo"] .novo-muted {
+  margin: 0;
+  color: var(--color-text-subtle);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+[data-app="novo"] .novo-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+[data-app="novo"] .novo-actions,
+[data-app="novo"] .novo-toolbar,
+[data-app="novo"] .novo-inline-field,
+[data-app="novo"] .novo-input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+[data-app="novo"] .novo-file-picker-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+[data-app="novo"] .novo-file-picker {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+[data-app="novo"] .novo-file-picker__label {
+  color: var(--color-text-subtle);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+[data-app="novo"] .novo-file-picker__control {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: white;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  border-radius: 18px;
+  min-height: 52px;
+}
+
+[data-app="novo"] .novo-file-picker__name {
+  flex: 1;
+  min-width: 0;
+  color: var(--color-text-main);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-app="novo"] .novo-file-picker__button {
+  white-space: nowrap;
+}
+
+[data-app="novo"] .novo-inline-field--stacked,
+[data-app="novo"] .novo-input-row {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+[data-app="novo"] .novo-btn {
+  border: 0;
+  border-radius: 12px;
+  min-height: 44px;
+  padding: 0 20px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 180ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-app="novo"] .novo-btn:hover {
+  transform: translateY(-1px);
+}
+
+[data-app="novo"] .novo-btn--primary {
+  background-color: var(--color-primary);
+  color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+[data-app="novo"] .novo-btn--primary:hover {
+  background-color: var(--color-primary-hover);
+  box-shadow: var(--shadow-glow-primary), 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+[data-app="novo"] .novo-btn--ghost {
+  background: white;
+  color: var(--color-primary-hover);
+  border: 1px solid var(--border-color);
+}
+
+[data-app="novo"] .novo-input,
+[data-app="novo"] .novo-textarea {
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.9);
+  font: inherit;
+  color: var(--color-text-main);
+}
+
+[data-app="novo"] .novo-textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+[data-app="novo"] .novo-input--small {
+  width: 92px;
+}
+
+[data-app="novo"] .novo-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+[data-app="novo"] .novo-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+[data-app="novo"] .novo-full {
+  grid-column: 1 / -1;
+}
+
+[data-app="novo"] .novo-grid {
+  display: grid;
+  gap: 16px;
+}
+
+[data-app="novo"] .novo-grid--stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+[data-app="novo"] .novo-grid--split {
+  grid-template-columns: 1.25fr 0.75fr;
+}
+
+[data-app="novo"] .novo-grid--conversations {
+  grid-template-columns: 0.95fr 1.05fr;
+}
+
+[data-app="novo"] .novo-grid--playground {
+  grid-template-columns: 1.2fr 0.8fr;
+}
+
+[data-app="novo"] .novo-card--section {
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  [data-app="novo"] .novo-shell {
+    padding: 16px 12px;
+  }
+
+  [data-app="novo"] .novo-page-header-clean {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  [data-app="novo"] .novo-page-header-clean > div:last-child {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  [data-app="novo"] .novo-form-grid,
+  [data-app="novo"] .novo-grid--split {
+    grid-template-columns: 1fr;
+  }
+
+  [data-app="novo"] .novo-grid--split > div {
+    width: 100%;
+  }
+}
+
+
+[data-app="novo"] .novo-section-title {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+[data-app="novo"] .novo-stat-card {
+  padding: 18px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(244,247,255,0.95) 100%);
+  border: 1px solid rgba(99,102,241,0.12);
+}
+
+[data-app="novo"] .novo-stat-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-primary-hover);
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+[data-app="novo"] .novo-stat-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 8px 0 4px;
+}
+
+[data-app="novo"] .novo-stat-card p {
+  margin: 0;
+  color: var(--color-text-subtle);
+  font-size: 0.9rem;
+}
+
+[data-app="novo"] .novo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+[data-app="novo"] .novo-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(248,250,252,0.9);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+[data-app="novo"] .novo-list-item--compact {
+  align-items: flex-start;
+}
+
+[data-app="novo"] .novo-list-item small {
+  color: var(--color-text-subtle);
+}
+
+[data-app="novo"] .novo-dropzone {
+  border: 1.5px dashed rgba(99, 102, 241, 0.35);
+  border-radius: 18px;
+  padding: 20px;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(224,231,255,0.5) 0%, rgba(255,255,255,0.8) 100%);
+}
+
+[data-app="novo"] .novo-dropzone--picker {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(248,250,255,0.95) 0%, rgba(255,255,255,0.98) 100%);
+}
+
+[data-app="novo"] .novo-dropzone-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+[data-app="novo"] .novo-dropzone-copy {
+  padding: 22px 20px;
+  border-radius: 18px;
+  border: 1px dashed rgba(37, 99, 235, 0.18);
+  background: rgba(255, 255, 255, 0.86);
+}
+
+[data-app="novo"] .novo-file-selected {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--color-text-main);
+  gap: 8px;
+}
+
+[data-app="novo"] .novo-file-selected span {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+[data-app="novo"] .novo-file-picker__button {
+  min-width: 140px;
+  padding: 10px 18px;
+}
+
+[data-app="novo"] .novo-file-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(248,250,252,0.9);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+[data-app="novo"] .novo-file-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+[data-app="novo"] .novo-file-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-main);
+  font-weight: 600;
+}
+
+[data-app="novo"] .novo-file-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+[data-app="novo"] .novo-file-actions .novo-btn {
+  white-space: nowrap;
+}
+
+[data-app="novo"] .novo-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  border: 0;
+  background: #cbd5e1;
+  cursor: pointer;
+  padding: 2px;
+}
+
+[data-app="novo"] .novo-switch.active {
+  background: var(--color-primary);
+}
+
+[data-app="novo"] .novo-switch span {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  transform: translateX(0);
+  transition: transform 160ms ease;
+}
+
+[data-app="novo"] .novo-switch.active span {
+  transform: translateX(20px);
+}
+
+[data-app="novo"] .novo-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+[data-app="novo"] .novo-chip {
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  padding: 8px 10px;
+  background: white;
+  cursor: pointer;
+}
+
+[data-app="novo"] .novo-chip.active {
+  background: var(--color-primary-subtle);
+  color: var(--color-primary-hover);
+}
+
+[data-app="novo"] .novo-icon-btn {
+  border: 0;
+  background: transparent;
+  color: var(--color-primary-hover);
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+[data-app="novo"] .novo-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary-hover);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+[data-app="novo"] .novo-panel-side {
+  display: flex;
+  justify-content: flex-end;
+}
+
+[data-app="novo"] .novo-page-header {
+  padding: 24px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(238,242,255,0.96) 100%);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+[data-app="novo"] .novo-page-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+[data-app="novo"] .novo-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 52px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  cursor: pointer;
+}
+
+[data-app="novo"] .novo-toggle input {
+  opacity: 0;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+
+[data-app="novo"] .novo-toggle-track {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: transparent;
+  position: relative;
+}
+
+[data-app="novo"] .novo-toggle-track::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 180ms ease, background 180ms ease;
+  box-shadow: 0 6px 12px rgba(15, 23, 42, 0.12);
+}
+
+[data-app="novo"] .novo-toggle input:checked + .novo-toggle-track::after {
+  transform: translateX(24px);
+}
+
+[data-app="novo"] .novo-toggle input:checked + .novo-toggle-track {
+  background: rgba(37, 99, 235, 0.25);
+}
+
+[data-app="novo"] .novo-code-block {
+  padding: 14px;
+  border-radius: 16px;
+  background: #0f172a;
+  color: #e2e8f0;
+  overflow: auto;
+  margin: 0;
+}
+
+[data-app="novo"] .novo-preview-card {
+  border-radius: 24px;
+  padding: 24px;
+  min-height: 220px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+[data-app="novo"] .novo-preview-bubble {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  width: fit-content;
+}
+
+[data-app="novo"] .novo-preview-bubble p {
+  margin: 4px 0 0;
+  color: #e2e8f0;
+}
+
+[data-app="novo"] .novo-preview-pill {
+  align-self: flex-start;
+  margin-top: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.16);
+  font-size: 0.8rem;
+}
+
+[data-app="novo"] .novo-preview-bubble--compact {
+  align-self: flex-end;
+}
+
+[data-app="novo"] .novo-chat-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(248,250,252,0.9);
+  min-height: 260px;
+}
+
+[data-app="novo"] .novo-chat-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: white;
+}
+
+[data-app="novo"] .novo-chat-message.assistant {
+  background: #ecfeff;
+}
+
+[data-app="novo"] .novo-chat-message.user {
+  justify-content: flex-end;
+  background: #f0fdf4;
+}
+
+[data-app="novo"] .novo-chat-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary-hover);
+  flex-shrink: 0;
+}
+
+[data-app="novo"] .novo-debug-card {
+  padding: 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(236,253,245,0.95));
+  border: 1px solid rgba(20,184,166,0.16);
+}
+
+[data-app="novo"] .novo-debug-card p {
+  margin: 8px 0 0;
+  color: var(--color-text-subtle);
+}
+
+[data-app="novo"] .novo-conversation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 14px;
+  background: rgba(248,250,252,0.9);
+  text-align: left;
+  cursor: pointer;
+}
+
+[data-app="novo"] .novo-conversation-item.active {
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+
+[data-app="novo"] .novo-conversation-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+[data-app="novo"] .novo-thread-card {
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(248,250,252,0.9);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+[data-app="novo"] .novo-thread-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+[data-app="novo"] .novo-thread-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+[data-app="novo"] .novo-thread-bubble {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: white;
+}
+
+[data-app="novo"] .novo-thread-bubble.assistant {
+  background: #ecfeff;
+}
+
+[data-app="novo"] .novo-thread-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary-hover);
+}
+
+[data-app="novo"] .novo-thread-copy {
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+
+[data-app="novo"] .novo-chart-card {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 180px;
+  padding: 16px 12px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(236,253,245,0.95));
+}
+
+[data-app="novo"] .novo-chart-bar {
+  flex: 1;
+  border-radius: 999px 999px 8px 8px;
+  background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+}
+
+[data-app="novo"] .novo-progress-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 16px;
+  background: rgba(248,250,252,0.9);
+}
+
+[data-app="novo"] .novo-progress-value {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+[data-app="novo"] .novo-progress-track {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(148,163,184,0.25);
+  overflow: hidden;
+}
+
+[data-app="novo"] .novo-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gradient-primary);
+}
+
+[data-app="novo"] .novo-integration-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+[data-app="novo"] .novo-integration-card {
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(248,250,252,0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+[data-app="novo"] .novo-integration-card p {
+  margin: 4px 0 0;
+  color: var(--color-text-subtle);
+  font-size: 0.9rem;
+}
+
+[data-app="novo"] .novo-integration-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary-hover);
+}
+
+[data-app="novo"] .novo-table-shell {
+  overflow-x: auto;
+}
+
+[data-app="novo"] .novo-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+[data-app="novo"] .novo-table th,
+[data-app="novo"] .novo-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+[data-app="novo"] .novo-table th {
+  color: var(--color-text-subtle);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+[data-app="novo"] .novo-empty-state {
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px dashed rgba(148,163,184,0.28);
+  background: rgba(248,250,252,0.9);
+  text-align: center;
+}
+
+[data-app="novo"] .novo-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: white;
+  min-width: 240px;
+}
+
+[data-app="novo"] .novo-input-group input {
+  border: 0;
+  padding: 10px 0;
+  box-shadow: none;
+}
+
+[data-app="novo"] .novo-input-group input:focus {
+  outline: none;
+}
+
+@media (max-width: 1200px) {
+  [data-app="novo"] .novo-grid--stats,
+  [data-app="novo"] .novo-grid--conversations,
+  [data-app="novo"] .novo-grid--playground,
+  [data-app="novo"] .novo-integration-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 960px) {
+  [data-app="novo"] .novo-card--hero,
+  [data-app="novo"] .novo-grid--split,
+  [data-app="novo"] .novo-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

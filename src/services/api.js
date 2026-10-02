@@ -1,6 +1,10 @@
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+if (!BASE_URL) {
+  console.warn("VITE_API_BASE_URL is not set. Add it to the .env file.");
+}
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -11,20 +15,25 @@ const api = axios.create({
 
 export const getSession = () => {
   try {
-    return JSON.parse(localStorage.getItem("nexo_session"));
+    const stored = JSON.parse(localStorage.getItem("nexo_session"));
+    if (!stored || typeof stored !== "object") return null;
+    const { apps, ...safeSession } = stored;
+    return safeSession;
   } catch {
     return null;
   }
 };
 
 export const setSession = (data) => {
-  localStorage.setItem("nexo_session", JSON.stringify(data));
+  const { apps, ...safeData } = data || {};
+  localStorage.setItem("nexo_session", JSON.stringify(safeData));
 };
 
 export const clearSession = () => {
   localStorage.removeItem("nexo_session");
   localStorage.removeItem("nexo_products_cache");
   localStorage.removeItem("nexo_vehicles_cache");
+  window.dispatchEvent(new Event("nexo_logout"));
 };
 
 export const pingService = async (serviceName) => {
