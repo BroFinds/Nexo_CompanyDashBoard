@@ -7,6 +7,7 @@ import {
   AlertTriangle, ArrowRight, Lock, Receipt, Truck,
 } from 'lucide-react';
 import { getSession } from '@/services/api';
+import { useEnabledApps } from '@/shared/context/EnabledAppsContext';
 import { useGlobal } from '../context/GlobalContext';
 import { useDeliwheels } from '@deliwheels/context/DeliwheelsContext';
 import { ALL_APPS } from '../constants/apps';
@@ -39,7 +40,7 @@ const isToday = (iso) => {
 
 const DashboardPage = () => {
   const session = getSession();
-  const enabledApps = session?.apps ?? [];
+  const { enabledApps } = useEnabledApps();
   const companyName = session?.companyName || 'company';
   const hasDeliwheels = enabledApps.includes('deliwheels');
 
