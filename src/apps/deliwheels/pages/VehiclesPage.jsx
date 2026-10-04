@@ -260,6 +260,7 @@ const VehiclesPage = () => {
         onClose={() => setIsFormOpen(false)}
         initialVehicle={editingVehicle}
         employees={employees}
+        routes={routes}
         onAdd={addVehicle}
         onUpdate={updateVehicle}
         onSetStatus={setVehicleStatus}
