@@ -57,7 +57,7 @@ const StockPage = () => {
   useEffect(() => {
     if (!vehiclesLoaded) fetchVehicles();
     if (!routesLoaded) fetchRoutes();
-    if (!stockLoaded) searchStock({});
+    if (!stockLoaded) searchStock({ fromDate: filterFromDate, toDate: filterToDate });
   }, [vehiclesLoaded, routesLoaded, fetchVehicles, fetchRoutes, stockLoaded, searchStock]);
 
   const hasCompleteDateRange = !!filterFromDate && !!filterToDate;
@@ -276,7 +276,7 @@ const StockPage = () => {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         initialEntry={editingEntry}
-        products={products}
+        products={products.filter((p) => p.is_active !== false)}
         vehicles={vehicles}
         routes={routes}
         onAdd={addStockLoading}

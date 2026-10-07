@@ -39,7 +39,7 @@ const SalesPage = () => {
 
   useEffect(() => {
     if (!vehiclesLoaded) fetchVehicles();
-    if (!salesLoaded) searchSales({});
+    if (!salesLoaded) searchSales({ fromDate: filterFromDate, toDate: filterToDate });
   }, [vehiclesLoaded, fetchVehicles, salesLoaded, searchSales]);
 
   const hasCompleteDateRange = !!filterFromDate && !!filterToDate;
@@ -103,7 +103,9 @@ const SalesPage = () => {
   const showResults = salesLoaded;
   const visibleSales = showResults ? filteredSales : [];
 
-  const isPaid = (s) => (s.payment_status_text || "").toUpperCase() === "PAID";
+  const isPaid = (s) =>
+    (s.payment_status_text || "").toUpperCase() === "PAID" ||
+    (s.payment_mode_text || "").toUpperCase() === "CASH";
   const paidRevenue = visibleSales.reduce(
     (sum, s) => (isPaid(s) ? sum + Number(s.grand_total || 0) : sum),
     0,

@@ -98,11 +98,13 @@ const OverviewReport = ({ fromDate, toDate }) => {
 
   const paymentSegments = useMemo(() => {
     const pm = data?.payment_mode || {};
-    const cash = Number(pm.paid_as_cash) || 0;
-    const upi = Number(pm.paid_as_upi) || 0;
+    const cash = Number(pm.paid_as_cash ?? pm.cash_amount ?? pm.cash ?? 0) || 0;
+    const upi = Number(pm.paid_as_upi ?? pm.upi_amount ?? pm.upi ?? 0) || 0;
+    const credit = Number(pm.paid_as_credit ?? pm.credit_amount ?? pm.credit ?? 0) || 0;
     const segs = [];
     if (cash > 0) segs.push({ label: "Cash", value: cash, color: "#059669" });
     if (upi > 0) segs.push({ label: "UPI", value: upi, color: "#6366f1" });
+    if (credit > 0) segs.push({ label: "Credit", value: credit, color: "#dc2626" });
     return segs;
   }, [data]);
 

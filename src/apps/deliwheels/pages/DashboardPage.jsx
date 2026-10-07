@@ -38,6 +38,20 @@ const formatCompact = (n) => {
   return v.toFixed(0);
 };
 
+const toISO = (d) => {
+  const x = new Date(d);
+  const tz = x.getTimezoneOffset() * 60000;
+  return new Date(x.getTime() - tz).toISOString().slice(0, 10);
+};
+
+const TIME_RANGES = [
+  { key: "today", label: "Today", getRange: () => { const t = toISO(new Date()); return { from: t, to: t }; } },
+  { key: "week", label: "This Week", getRange: () => { const now = new Date(); const d = new Date(now); d.setDate(d.getDate() - d.getDay()); return { from: toISO(d), to: toISO(now) }; } },
+  { key: "month", label: "This Month", getRange: () => { const now = new Date(); return { from: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`, to: toISO(now) }; } },
+  { key: "year", label: "This Year", getRange: () => { const now = new Date(); return { from: `${now.getFullYear()}-01-01`, to: toISO(now) }; } },
+  { key: "alltime", label: "All Time", getRange: () => ({ from: "", to: "" }) },
+];
+
 const DashboardPage = () => {
   const navigate = useNavigate();
   const {
@@ -49,10 +63,16 @@ const DashboardPage = () => {
   } = useDeliwheels();
   const { products } = useGlobal();
 
+  const [timeRangeKey, setTimeRangeKey] = useState("today");
+  const dateRange = useMemo(
+    () => TIME_RANGES.find((r) => r.key === timeRangeKey)?.getRange() ?? {},
+    [timeRangeKey],
+  );
+
   const {
     data: dashboard,
     isLoading: isLoadingDashboard,
-  } = useDashboardSummary();
+  } = useDashboardSummary({ fromDate: dateRange.from, toDate: dateRange.to });
 
   const [isStockFormOpen, setIsStockFormOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
@@ -64,10 +84,54 @@ const DashboardPage = () => {
   const isLoading = isLoadingDashboard || isLoadingVehicles;
 
   const summary = dashboard?.summary || {};
-  const leaderboard = useMemo(
+  const leaderboardRaw = useMemo(
     () => dashboard?.leaderboard ?? [],
     [dashboard],
   );
+
+  // Merge leaderboard with ALL vehicles so every vehicle appears
+  const leaderboard = useMemo(() => {
+    const map = new Map();
+    leaderboardRaw.forEach((row) => {
+      map.set(row.vehicle_uid || row.vehicle_number, row);
+    });
+    const merged = vehicles.map((v) => {
+      const existing = map.get(v.vehicle_uid) || map.get(v.registration) || {};
+      return {
+        vehicle_uid: v.vehicle_uid,
+        vehicle_number: v.registration || existing.vehicle_number || "—",
+        driver_name: v.driver || existing.driver_name || "Unassigned",
+        total_revenue: Number(existing.total_revenue || 0),
+        total_sales_count: Number(existing.total_sales_count || 0),
+        avg_sale: Number(existing.avg_sale || 0),
+        total_returns: Number(existing.total_returns || 0),
+        return_value: Number(existing.return_value || 0),
+        cash_amount: Number(existing.cash_amount || 0),
+        upi_amount: Number(existing.upi_amount || 0),
+        credit_amount: Number(existing.credit_amount || 0),
+      };
+    });
+    // Keep leaderboard entries not in vehicles list too
+    leaderboardRaw.forEach((row) => {
+      const key = row.vehicle_uid || row.vehicle_number;
+      const inList = vehicles.some((v) => v.vehicle_uid === row.vehicle_uid || v.registration === row.vehicle_number);
+      if (!inList) merged.push({
+        vehicle_uid: row.vehicle_uid,
+        vehicle_number: row.vehicle_number || "—",
+        driver_name: row.driver_name || "Unassigned",
+        total_revenue: Number(row.total_revenue || 0),
+        total_sales_count: Number(row.total_sales_count || 0),
+        avg_sale: Number(row.avg_sale || 0),
+        total_returns: Number(row.total_returns || 0),
+        return_value: Number(row.return_value || 0),
+        cash_amount: Number(row.cash_amount || 0),
+        upi_amount: Number(row.upi_amount || 0),
+        credit_amount: Number(row.credit_amount || 0),
+      });
+    });
+    return merged.sort((a, b) => b.total_revenue - a.total_revenue);
+  }, [leaderboardRaw, vehicles]);
+
   const collection = dashboard?.collection || {};
   const stockLoaded = useMemo(
     () => dashboard?.stock_loaded ?? [],
@@ -81,6 +145,8 @@ const DashboardPage = () => {
     const other = Math.max(0, total - cash - upi);
     return { cash, upi, other, total };
   }, [collection]);
+
+  const rangeLabel = TIME_RANGES.find((r) => r.key === timeRangeKey)?.label ?? "Today";
 
   const stats = [
     {
@@ -100,7 +166,7 @@ const DashboardPage = () => {
       bg: "linear-gradient(135deg, #dbeafe, #bfdbfe)",
     },
     {
-      label: "Today's Sales",
+      label: `${rangeLabel} Sales`,
       value: Number(summary.total_sales_today || 0),
       sub: `${Number(summary.total_sales_alltime || 0)} all-time`,
       icon: PackageCheck,
@@ -108,7 +174,7 @@ const DashboardPage = () => {
       bg: "linear-gradient(135deg, #d1fae5, #a7f3d0)",
     },
     {
-      label: "Today's Revenue",
+      label: `${rangeLabel} Revenue`,
       value: `₹${formatCompact(summary.total_revenue_today)}`,
       sub:
         Number(summary.total_pending_today || 0) > 0
@@ -168,6 +234,30 @@ const DashboardPage = () => {
       headerTitle="Dashboard"
       headerSubtitle="DeliWheels operations overview"
     >
+      {/* Time-range selector */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "var(--spacing-lg)" }}>
+        <div style={{ display: "inline-flex", gap: "4px", padding: "4px", backgroundColor: "var(--bg-body)", borderRadius: "10px", border: "1px solid var(--border-subtle)" }}>
+          {TIME_RANGES.map((range) => (
+            <button
+              key={range.key}
+              type="button"
+              onClick={() => setTimeRangeKey(range.key)}
+              style={{
+                padding: "6px 14px", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer",
+                border: "none", borderRadius: "7px",
+                background: timeRangeKey === range.key ? "var(--color-primary, #6366f1)" : "transparent",
+                color: timeRangeKey === range.key ? "#fff" : "var(--color-text-subtle)",
+                boxShadow: timeRangeKey === range.key ? "0 1px 3px rgba(99,102,241,0.25)" : "none",
+                transition: "all 0.15s ease",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {range.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Stats Grid */}
       <div
         className="dashboard-grid"
@@ -328,7 +418,7 @@ const DashboardPage = () => {
               <Trophy size={18} style={{ color: "#f59e0b" }} />
               <div>
                 <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>
-                  Today&apos;s Vehicle Leaderboard
+                  Vehicle Leaderboard — {rangeLabel}
                 </h3>
                 <p
                   style={{
@@ -337,7 +427,7 @@ const DashboardPage = () => {
                     margin: "2px 0 0 0",
                   }}
                 >
-                  Ranked by revenue collected today
+                  All vehicles ranked by revenue
                 </p>
               </div>
             </div>
@@ -350,8 +440,7 @@ const DashboardPage = () => {
                 letterSpacing: "0.04em",
               }}
             >
-              {leaderboard.length} active vehicle
-              {leaderboard.length === 1 ? "" : "s"}
+              {leaderboard.length} vehicle{leaderboard.length === 1 ? "" : "s"}
             </span>
           </div>
           <VehicleLeaderboard rows={leaderboard} />
@@ -623,157 +712,65 @@ const VehicleLeaderboard = ({ rows }) => {
           borderRadius: 8,
         }}
       >
-        No sales yet today.
+        No vehicles found.
       </div>
     );
   }
 
-  const maxRevenue =
-    Math.max(...rows.map((r) => Number(r.total_revenue || 0))) || 1;
   const medals = ["#f59e0b", "#94a3b8", "#b45309"];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {rows.map((row, i) => {
-        const reg = row.vehicle_number || "—";
-        const driver = row.driver_name || "Unassigned";
-        const revenue = Number(row.total_revenue || 0);
-        const count = Number(row.total_sales_count || 0);
-        const avgTicket = Number(row.avg_sale || 0);
-        const pct = (revenue / maxRevenue) * 100;
-        const medal = medals[i] || "var(--color-primary, #6366f1)";
-        return (
-          <div
-            key={`${reg}-${i}`}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "32px minmax(0, 1.4fr) 2fr auto",
-              alignItems: "center",
-              gap: 14,
-              padding: "10px 12px",
-              background: "var(--bg-body)",
-              borderRadius: 10,
-              border: i === 0 ? `1px solid ${medal}40` : "1px solid transparent",
-            }}
-          >
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: "50%",
-                background: medal,
-                color: "#fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "0.78rem",
-                fontWeight: 800,
-                boxShadow:
-                  i === 0 ? "0 4px 10px rgba(245, 158, 11, 0.3)" : "none",
-              }}
-            >
-              {i < 3 ? <Trophy size={14} /> : `#${i + 1}`}
-            </div>
-
-            <div style={{ minWidth: 0 }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  fontFamily: "monospace",
-                  fontWeight: 800,
-                  fontSize: "0.92rem",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <Truck
-                  size={13}
-                  style={{
-                    color: "var(--color-text-subtle)",
-                    flexShrink: 0,
-                  }}
-                />
-                {reg}
-              </div>
-              <div
-                style={{
-                  fontSize: "0.72rem",
-                  color: "var(--color-text-subtle)",
-                  marginTop: 1,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {driver}
-              </div>
-            </div>
-
-            <div>
-              <div
-                style={{
-                  height: 8,
-                  background: "var(--color-border, #f3f4f6)",
-                  borderRadius: 4,
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    height: "100%",
-                    width: `${pct}%`,
-                    background: `linear-gradient(90deg, ${medal}, ${medal}cc)`,
-                    borderRadius: 4,
-                    transition: "width 0.6s ease",
-                  }}
-                />
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "0.7rem",
-                  color: "var(--color-text-subtle)",
-                  marginTop: 4,
-                }}
-              >
-                <span>
-                  {count} sale{count === 1 ? "" : "s"}
-                </span>
-                <span>avg ₹{formatCompact(avgTicket)}</span>
-              </div>
-            </div>
-
-            <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-              <div
-                style={{
-                  fontSize: "1.05rem",
-                  fontWeight: 800,
-                  letterSpacing: "-0.01em",
-                  lineHeight: 1.1,
-                  fontFamily: "monospace",
-                }}
-              >
-                ₹{formatMoney(revenue)}
-              </div>
-              <div
-                style={{
-                  fontSize: "0.66rem",
-                  color: "var(--color-text-subtle)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.04em",
-                  marginTop: 1,
-                }}
-              >
-                Today
-              </div>
-            </div>
-          </div>
-        );
-      })}
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", minWidth: 680 }}>
+        <thead>
+          <tr style={{ borderBottom: "2px solid var(--color-border, #e5e7eb)" }}>
+            {["#", "Vehicle", "Sales", "Revenue", "Returns", "Ret. Value", "Cash", "UPI", "Credit"].map((h, i) => (
+              <th key={h} style={{ padding: "8px 10px", textAlign: i <= 1 ? "left" : "right", fontSize: "0.7rem", fontWeight: 700, color: "var(--color-text-subtle)", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => {
+            const reg = row.vehicle_number || "—";
+            const driver = row.driver_name || "Unassigned";
+            const revenue = Number(row.total_revenue || 0);
+            const count = Number(row.total_sales_count || 0);
+            const returns = Number(row.total_returns || 0);
+            const returnVal = Number(row.return_value || 0);
+            const cash = Number(row.cash_amount || 0);
+            const upi = Number(row.upi_amount || 0);
+            const credit = Number(row.credit_amount || 0);
+            const medal = medals[i] || "var(--color-primary, #6366f1)";
+            const hasActivity = revenue > 0 || count > 0;
+            return (
+              <tr key={`${reg}-${i}`} style={{ borderBottom: "1px solid var(--border-subtle, #f3f4f6)", opacity: hasActivity ? 1 : 0.55 }}>
+                <td style={{ padding: "10px 10px", width: 36 }}>
+                  <div style={{
+                    width: 26, height: 26, borderRadius: "50%",
+                    background: i < 3 && hasActivity ? medal : "var(--bg-body, #f9fafb)",
+                    color: i < 3 && hasActivity ? "#fff" : "var(--color-text-subtle)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "0.72rem", fontWeight: 800, flexShrink: 0,
+                  }}>
+                    {i < 3 && hasActivity ? <Trophy size={13} /> : `${i + 1}`}
+                  </div>
+                </td>
+                <td style={{ padding: "10px 10px" }}>
+                  <div style={{ fontFamily: "monospace", fontWeight: 700, fontSize: "0.88rem" }}>{reg}</div>
+                  <div style={{ fontSize: "0.7rem", color: "var(--color-text-subtle)", marginTop: 1 }}>{driver}</div>
+                </td>
+                <td style={{ padding: "10px 10px", textAlign: "right", fontFamily: "monospace", fontWeight: 700 }}>{count}</td>
+                <td style={{ padding: "10px 10px", textAlign: "right", fontFamily: "monospace", fontWeight: 800, color: revenue > 0 ? "#059669" : "var(--color-text-subtle)" }}>₹{formatCompact(revenue)}</td>
+                <td style={{ padding: "10px 10px", textAlign: "right", fontFamily: "monospace", color: returns > 0 ? "#d97706" : "var(--color-text-subtle)" }}>{returns}</td>
+                <td style={{ padding: "10px 10px", textAlign: "right", fontFamily: "monospace", color: returnVal > 0 ? "#d97706" : "var(--color-text-subtle)" }}>₹{formatCompact(returnVal)}</td>
+                <td style={{ padding: "10px 10px", textAlign: "right", fontFamily: "monospace", color: cash > 0 ? "#059669" : "var(--color-text-subtle)" }}>₹{formatCompact(cash)}</td>
+                <td style={{ padding: "10px 10px", textAlign: "right", fontFamily: "monospace", color: upi > 0 ? "#6366f1" : "var(--color-text-subtle)" }}>₹{formatCompact(upi)}</td>
+                <td style={{ padding: "10px 10px", textAlign: "right", fontFamily: "monospace", color: credit > 0 ? "#dc2626" : "var(--color-text-subtle)" }}>₹{formatCompact(credit)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 };

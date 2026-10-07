@@ -4,9 +4,8 @@ import ShopCard from "../components/ShopCard";
 import ShopFormModal from "./modals/shops/ShopFormModal";
 import ShopDetailModal from "./modals/shops/ShopDetailModal";
 import Card from "@shared/components/ui/Card";
-import Button from "@shared/components/ui/Button";
 import Skeleton from "@shared/components/ui/Skeleton";
-import { Search, Plus, Store } from "lucide-react";
+import { Search, Store } from "lucide-react";
 import { useDeliwheels } from "../context/DeliwheelsContext";
 
 const ShopsPage = () => {
@@ -87,12 +86,6 @@ const ShopsPage = () => {
             Each shop is a delivery stop on a route.
           </p>
         </div>
-        <Button
-          onClick={handleOpenAdd}
-          style={{ display: "flex", alignItems: "center", gap: "6px" }}
-        >
-          <Plus size={16} /> Add Shop
-        </Button>
       </div>
 
       {/* Filters */}

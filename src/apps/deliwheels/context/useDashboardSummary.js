@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import api, { getSession } from "@/services/api";
 
-export const useDashboardSummary = ({ enabled = true } = {}) => {
+export const useDashboardSummary = ({ enabled = true, fromDate, toDate } = {}) => {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -13,8 +13,12 @@ export const useDashboardSummary = ({ enabled = true } = {}) => {
     setIsLoading(true);
     setError(null);
     try {
+      const params = {};
+      if (fromDate) params.fromDate = fromDate;
+      if (toDate) params.toDate = toDate;
       const { data: payload } = await api.get(
         `/api/v1/deliwheels/reports/dashboard/company/${session.companyId}`,
+        { params },
       );
       setData(payload);
     } catch (e) {
@@ -28,7 +32,7 @@ export const useDashboardSummary = ({ enabled = true } = {}) => {
     } finally {
       setIsLoading(false);
     }
-  }, [enabled]);
+  }, [enabled, fromDate, toDate]);
 
   useEffect(() => {
     fetchSummary();
