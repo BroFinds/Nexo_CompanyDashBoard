@@ -7,13 +7,14 @@ import {
   ArrowRight, Lock,
 } from 'lucide-react';
 import { getSession } from '@/services/api';
+import { useEnabledApps } from '@/shared/context/EnabledAppsContext';
 import { useGlobal } from '../context/GlobalContext';
 import { ALL_APPS } from '../constants/apps';
 
 
 const DashboardPage = () => {
   const session = getSession();
-  const enabledApps = session?.apps ?? [];
+  const { enabledApps } = useEnabledApps();
   const companyName = session?.companyName || 'company';
 
   const { employees, products, isLoadingEmployees, isLoadingProducts } = useGlobal();

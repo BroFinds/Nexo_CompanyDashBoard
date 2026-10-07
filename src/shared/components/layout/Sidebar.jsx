@@ -1,7 +1,7 @@
 import React from 'react';
 import { User, Settings, LogOut, ArrowLeft } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getSession } from '@/services/api';
+import { getSession, logout } from '@/services/api';
 
 const Sidebar = ({ isOpen, onClose, navItems = [], brand = { name: 'Nexo', letter: 'N' }, backLink }) => {
   const navigate = useNavigate();
@@ -122,7 +122,7 @@ const Sidebar = ({ isOpen, onClose, navItems = [], brand = { name: 'Nexo', lette
                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-subtle)' }}>Operations</p>
              </div>
              <button
-               onClick={() => { localStorage.removeItem('nexo_session'); navigate('/login'); }}
+               onClick={() => { void logout(); }}
                title="Sign out"
                style={{ border: 'none', background: 'transparent', cursor: 'pointer', opacity: 0.5, padding: '4px', borderRadius: '4px', transition: 'all var(--anim-fast)' }}
                onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = '#ef4444'; }}

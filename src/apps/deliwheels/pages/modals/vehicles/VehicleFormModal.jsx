@@ -55,7 +55,8 @@ const VehicleFormModal = ({
         (emp) => emp.employee_uid === initialVehicle.employee_uid,
       );
       const selectedEmployeeUid = selectedEmployee?.employee_uid || "";
-      const selectedEmployeeName = selectedEmployee?.name || initialVehicle.driver || "Unassigned";
+      const selectedEmployeeName =
+        selectedEmployee?.name || initialVehicle.driver || "Unassigned";
       const selectedRouteUid = initialVehicle.route_uid || "";
 
       setFormData({
@@ -69,9 +70,12 @@ const VehicleFormModal = ({
     } else {
       const activeRoutes = (routes || []).filter((r) => r.status === "active");
       const activeEmployees = (employees || []).filter((e) => e.is_active);
-      const defaultRoute = activeRoutes.length === 1 ? activeRoutes[0].route_uid : "";
-      const defaultEmployee = activeEmployees.length === 1 ? activeEmployees[0].employee_uid : "";
-      const defaultEmployeeName = activeEmployees.length === 1 ? activeEmployees[0].name : "Unassigned";
+      const defaultRoute =
+        activeRoutes.length === 1 ? activeRoutes[0].route_uid : "";
+      const defaultEmployee =
+        activeEmployees.length === 1 ? activeEmployees[0].employee_uid : "";
+      const defaultEmployeeName =
+        activeEmployees.length === 1 ? activeEmployees[0].name : "Unassigned";
       setFormData({
         ...EMPTY_VEHICLE,
         route_uid: defaultRoute,
