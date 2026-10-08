@@ -13,6 +13,7 @@ import {
 import { useDeliwheels } from "../context/DeliwheelsContext";
 import { useGlobal } from "../../nexo/context/GlobalContext";
 import SearchableSelect from "@shared/components/ui/SearchableSelect";
+import DateRangeBar, { STANDARD_PRESETS } from "../components/DateRangeBar";
 import StockReport from "./reports/StockReport";
 import OverviewReport from "./reports/OverviewReport";
 import SalesByVehicleReport from "./reports/SalesByVehicleReport";
@@ -51,11 +52,7 @@ const REPORTS = [
   },
 ];
 
-const RANGE_PRESETS = [
-  { key: "7d", label: "Last 7 days", days: 7 },
-  { key: "30d", label: "Last 30 days", days: 30 },
-  { key: "90d", label: "Last 90 days", days: 90 },
-];
+// RANGE_PRESETS replaced by STANDARD_PRESETS from DateRangeBar
 
 const ReportsPage = () => {
   const { vehicles, fetchVehicles, fetchStock, fetchRoutes, fetchSales } =
@@ -78,7 +75,7 @@ const ReportsPage = () => {
     productUid: "",
   });
 
-  const [rangeKey, setRangeKey] = useState("30d");
+  const [rangeKey, setRangeKey] = useState("month");
   const [fromDate, setFromDate] = useState(monthAgo);
   const [toDate, setToDate] = useState(today);
   const [vehicleFilter, setVehicleFilter] = useState("");
@@ -163,15 +160,27 @@ const ReportsPage = () => {
     [products],
   );
 
-  const overviewRange = useMemo(() => {
-    const days = (
-      RANGE_PRESETS.find((r) => r.key === rangeKey) || RANGE_PRESETS[1]
-    ).days;
-    const to = new Date();
-    const from = new Date(to);
-    from.setDate(to.getDate() - (days - 1));
-    return { fromDate: toISODate(from), toDate: toISODate(to) };
-  }, [rangeKey]);
+  // Direct state for overview date range; rangeKey just tracks which pill is highlighted.
+  const [overviewFrom, setOverviewFromRaw] = useState(() => {
+    const { from } = (STANDARD_PRESETS.find((r) => r.key === "month") ?? STANDARD_PRESETS[1]).getRange();
+    return from;
+  });
+  const [overviewTo, setOverviewToRaw] = useState(() => {
+    const { to } = (STANDARD_PRESETS.find((r) => r.key === "month") ?? STANDARD_PRESETS[1]).getRange();
+    return to;
+  });
+
+  const setOverviewFrom = (val) => {
+    setOverviewFromRaw(val);
+    // Clear preset highlight when user types a custom date
+    const matched = STANDARD_PRESETS.find((p) => { const r = p.getRange(); return r.from === val && r.to === overviewTo; });
+    setRangeKey(matched?.key ?? "");
+  };
+  const setOverviewTo = (val) => {
+    setOverviewToRaw(val);
+    const matched = STANDARD_PRESETS.find((p) => { const r = p.getRange(); return r.from === overviewFrom && r.to === val; });
+    setRangeKey(matched?.key ?? "");
+  };
 
   const selectedVehicle = vehicles.find((v) => v.vehicle_uid === vehicleFilter);
   const selectedProduct = productOptions.find((p) => p.uid === productFilter);
@@ -240,66 +249,25 @@ const ReportsPage = () => {
 
       {activeReport === "overview" && (
         <Card padding="md" style={{ marginBottom: "var(--spacing-lg)" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              flexWrap: "wrap",
-              justifyContent: "space-between",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                color: "var(--color-text-subtle)",
-              }}
-            >
-              <Filter size={16} />
-              <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
-                Date Range
-              </span>
-            </div>
-            <div
-              role="group"
-              aria-label="Date range"
-              style={{
-                display: "flex",
-                gap: 6,
-                padding: 4,
-                background: "var(--bg-body)",
-                border: "1px solid var(--color-border, #e5e7eb)",
-                borderRadius: 10,
-              }}
-            >
-              {RANGE_PRESETS.map((r) => {
-                const active = rangeKey === r.key;
-                return (
-                  <button
-                    key={r.key}
-                    onClick={() => setRangeKey(r.key)}
-                    style={{
-                      padding: "8px 14px",
-                      fontSize: "0.85rem",
-                      fontWeight: 600,
-                      border: "none",
-                      borderRadius: 7,
-                      cursor: "pointer",
-                      background: active
-                        ? "var(--color-primary, #6366f1)"
-                        : "transparent",
-                      color: active ? "white" : "var(--color-text-subtle)",
-                      transition: "all 0.15s ease",
-                    }}
-                  >
-                    {r.label}
-                  </button>
-                );
-              })}
-            </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, color: "var(--color-text-subtle)" }}>
+            <Filter size={16} />
+            <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Date Range</span>
           </div>
+          <DateRangeBar
+            presets={STANDARD_PRESETS}
+            fromDate={overviewFrom}
+            setFromDate={setOverviewFrom}
+            toDate={overviewTo}
+            setToDate={setOverviewTo}
+            onPresetApply={(from, to) => {
+              setOverviewFromRaw(from);
+              setOverviewToRaw(to);
+              const key = STANDARD_PRESETS.find(
+                (p) => { const r = p.getRange(); return r.from === from && r.to === to; }
+              )?.key ?? "";
+              setRangeKey(key);
+            }}
+          />
         </Card>
       )}
 
@@ -329,10 +297,27 @@ const ReportsPage = () => {
             </div>
           </div>
 
+          {/* Quick date presets for non-overview tabs — auto-apply on click */}
+          <div style={{ marginTop: "var(--spacing-sm)", marginBottom: "var(--spacing-md)" }}>
+            <DateRangeBar
+              presets={STANDARD_PRESETS}
+              fromDate={fromDate}
+              setFromDate={(val) => { setFromDate(val); setRangeKey(""); }}
+              toDate={toDate}
+              setToDate={(val) => { setToDate(val); setRangeKey(""); }}
+              onPresetApply={(from, to) => {
+                setFromDate(from);
+                setToDate(to);
+                setAppliedFilters((prev) => ({ ...prev, fromDate: from, toDate: to }));
+                setFilterApplied(true);
+              }}
+            />
+          </div>
+
           <div
             className="reports-filters"
             style={{
-              marginTop: "var(--spacing-md)",
+              marginTop: 0,
               marginBottom: "var(--spacing-md)",
               alignItems: "flex-end",
             }}
@@ -508,8 +493,8 @@ const ReportsPage = () => {
 
       {activeReport === "overview" && (
         <OverviewReport
-          fromDate={overviewRange.fromDate}
-          toDate={overviewRange.toDate}
+          fromDate={overviewFrom}
+          toDate={overviewTo}
         />
       )}
 

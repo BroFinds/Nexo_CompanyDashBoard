@@ -7,6 +7,12 @@ import { RotateCcw, Package, Truck, Search } from "lucide-react";
 import { useDeliwheels } from "../context/DeliwheelsContext";
 import { useGlobal } from "../../nexo/context/GlobalContext";
 import SearchableSelect from "@shared/components/ui/SearchableSelect";
+import DateRangeBar from "../components/DateRangeBar";
+
+const todayISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
 const HEADERS = ["Product", "Qty Returned", "Vehicle", "Date", "Reason"];
 
@@ -29,8 +35,8 @@ const ReturnsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const [filterVehicle, setFilterVehicle] = useState("all");
-  const [filterFromDate, setFilterFromDate] = useState("");
-  const [filterToDate, setFilterToDate] = useState("");
+  const [filterFromDate, setFilterFromDate] = useState(todayISO);
+  const [filterToDate, setFilterToDate] = useState(todayISO);
   const [searchTerm, setSearchTerm] = useState("");
 
   const hasCompleteDateRange = !!filterFromDate && !!filterToDate;
@@ -132,39 +138,43 @@ const ReturnsPage = () => {
 
       {/* Filter bar */}
       <Card padding="md" style={{ marginBottom: "var(--spacing-lg)" }}>
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
-          {/* Search */}
-          <div style={{ position: "relative", flex: "1", minWidth: "160px" }}>
-            <Search size={15} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-subtle)" }} />
-            <input
-              type="text"
-              placeholder="Search by product name, code or vehicle..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ width: "100%", padding: "8px 8px 8px 30px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", fontSize: "0.875rem", outline: "none" }}
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {/* Row 1: search + vehicle + clear */}
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{ position: "relative", flex: "1", minWidth: "160px" }}>
+              <Search size={15} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-subtle)" }} />
+              <input
+                type="text"
+                placeholder="Search by product name, code or vehicle..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ width: "100%", padding: "8px 8px 8px 30px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", fontSize: "0.875rem", outline: "none" }}
+              />
+            </div>
+            <SearchableSelect
+              placeholder="All Vehicles"
+              value={filterVehicle}
+              onChange={setFilterVehicle}
+              options={[
+                { value: "all", label: "All Vehicles" },
+                ...vehicles.filter((v) => v.status === "active").map((v) => ({ value: v.vehicle_uid, label: v.registration || v.vehicle_uid })),
+              ]}
+              style={{ minWidth: "160px" }}
             />
+            {hasActiveFilter && (
+              <Button variant="ghost" onClick={clearFilters} style={{ whiteSpace: "nowrap", fontSize: "0.8rem" }}>
+                Clear
+              </Button>
+            )}
           </div>
-          {/* Vehicle filter */}
-          <SearchableSelect
-            placeholder="All Vehicles"
-            value={filterVehicle}
-            onChange={setFilterVehicle}
-            options={[
-              { value: "all", label: "All Vehicles" },
-              ...vehicles.filter((v) => v.status === "active").map((v) => ({ value: v.vehicle_uid, label: v.registration || v.vehicle_uid })),
-            ]}
-            style={{ minWidth: "160px" }}
+
+          {/* Row 2: date presets + custom range */}
+          <DateRangeBar
+            fromDate={filterFromDate}
+            setFromDate={setFilterFromDate}
+            toDate={filterToDate}
+            setToDate={setFilterToDate}
           />
-          {/* Date range */}
-          <input type="date" value={filterFromDate} onChange={(e) => setFilterFromDate(e.target.value)}
-            style={{ padding: "8px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", fontSize: "0.875rem" }} />
-          <input type="date" value={filterToDate} onChange={(e) => setFilterToDate(e.target.value)}
-            style={{ padding: "8px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", fontSize: "0.875rem" }} />
-          {hasActiveFilter && (
-            <Button variant="ghost" onClick={clearFilters} style={{ whiteSpace: "nowrap", fontSize: "0.8rem" }}>
-              Clear
-            </Button>
-          )}
         </div>
       </Card>
 
