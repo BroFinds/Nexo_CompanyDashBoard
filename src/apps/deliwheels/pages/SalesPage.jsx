@@ -4,6 +4,7 @@ import SalesStats from "../components/SalesStats";
 import SalesFilterBar from "../components/SalesFilterBar";
 import SalesTable from "../components/SalesTable";
 import SaleDetailModal from "./modals/sales/SaleDetailModal";
+import CollectPaymentModal from "./modals/sales/CollectPaymentModal";
 import { useDeliwheels } from "../context/DeliwheelsContext";
 
 const todayISO = () => {
@@ -26,6 +27,7 @@ const SalesPage = () => {
     fetchSales,
     searchSales,
     getSale,
+    collectPayment,
   } = useDeliwheels();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -36,6 +38,8 @@ const SalesPage = () => {
   const [detailSale, setDetailSale] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState("");
+
+  const [collectSale, setCollectSale] = useState(null);
 
   useEffect(() => {
     if (!vehiclesLoaded) fetchVehicles();
@@ -198,6 +202,7 @@ const SalesPage = () => {
         salesHasMore={salesHasMore}
         onLoadMore={fetchSales}
         onViewSale={openDetails}
+        onCollectPayment={setCollectSale}
       />
 
       <SaleDetailModal
@@ -205,6 +210,12 @@ const SalesPage = () => {
         loading={detailLoading}
         error={detailError}
         onClose={closeDetails}
+      />
+
+      <CollectPaymentModal
+        sale={collectSale}
+        onClose={() => setCollectSale(null)}
+        onConfirm={collectPayment}
       />
     </DeliwheelsLayout>
   );

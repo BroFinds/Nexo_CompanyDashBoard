@@ -3,7 +3,7 @@ import Card from "@shared/components/ui/Card";
 import Badge from "@shared/components/ui/Badge";
 import Button from "@shared/components/ui/Button";
 import Skeleton from "@shared/components/ui/Skeleton";
-import { Filter, Eye } from "lucide-react";
+import { Filter, Eye, Wallet } from "lucide-react";
 import useInfiniteScroll from "@shared/hooks/useInfiniteScroll";
 import InfiniteScrollLoader from "@shared/components/ui/InfiniteScrollLoader";
 import {
@@ -47,6 +47,7 @@ const SalesTable = ({
   salesHasMore,
   onLoadMore,
   onViewSale,
+  onCollectPayment,
 }) => {
   const scrollContainerRef = useRef(null);
   const sentinelRef = useInfiniteScroll({
@@ -202,20 +203,40 @@ const SalesTable = ({
                       {sale.payment_mode_text || "—"}
                     </td>
                     <td style={{ padding: "14px 16px", textAlign: "right" }}>
-                      <Button
-                        variant="secondary"
-                        onClick={() => onViewSale(sale.sale_uid)}
-                        style={{
-                          padding: "6px 12px",
-                          fontSize: "0.8rem",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                        }}
-                        title="View sale details (read-only)"
-                      >
-                        <Eye size={14} /> View
-                      </Button>
+                      <div style={{ display: "inline-flex", gap: "6px", alignItems: "center" }}>
+                        {(sale.payment_status_text || "").toUpperCase() !== "PAID" && (
+                          <Button
+                            onClick={() => onCollectPayment(sale)}
+                            style={{
+                              padding: "6px 12px",
+                              fontSize: "0.8rem",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              background: "#f59e0b",
+                              color: "#fff",
+                              border: "none",
+                            }}
+                            title="Collect payment for this sale"
+                          >
+                            <Wallet size={14} /> Collect
+                          </Button>
+                        )}
+                        <Button
+                          variant="secondary"
+                          onClick={() => onViewSale(sale.sale_uid)}
+                          style={{
+                            padding: "6px 12px",
+                            fontSize: "0.8rem",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
+                          title="View sale details (read-only)"
+                        >
+                          <Eye size={14} /> View
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -136,6 +136,16 @@ export const useSales = () => {
     return mapSale(data);
   }, []);
 
+  const collectPayment = useCallback(async (saleUid) => {
+    const session = getSession();
+    const { data } = await api.patch(
+      `/api/v1/deliwheels/sales/company/${session.companyId}/${saleUid}/collect-payment`,
+    );
+    const updated = mapSale(data);
+    setSales((prev) => prev.map((s) => s.sale_uid === saleUid ? updated : s));
+    return updated;
+  }, []);
+
   return {
     sales,
     isLoadingSales,
@@ -145,5 +155,6 @@ export const useSales = () => {
     searchSales,
     fetchAllSales,
     getSale,
+    collectPayment,
   };
 };
