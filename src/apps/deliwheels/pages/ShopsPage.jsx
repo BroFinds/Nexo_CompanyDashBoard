@@ -5,7 +5,8 @@ import ShopFormModal from "./modals/shops/ShopFormModal";
 import ShopDetailModal from "./modals/shops/ShopDetailModal";
 import Card from "@shared/components/ui/Card";
 import Skeleton from "@shared/components/ui/Skeleton";
-import { Search, Store } from "lucide-react";
+import Button from "@shared/components/ui/Button";
+import { Search, Store, Plus } from "lucide-react";
 import { useDeliwheels } from "../context/DeliwheelsContext";
 
 const ShopsPage = () => {
