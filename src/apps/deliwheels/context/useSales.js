@@ -149,6 +149,23 @@ export const useSales = () => {
     return updated;
   }, []);
 
+  const collectVehiclePayment = useCallback(async (vehicleUid, date) => {
+    const session = getSession();
+    await api.patch(
+      `/api/v1/deliwheels/sales/company/${session.companyId}/vehicles/${vehicleUid}/collect-payment`,
+      null,
+      { params: { date } },
+    );
+    // Reflect the change immediately in the local sales list
+    setSales((prev) =>
+      prev.map((s) =>
+        s.vehicle_uid === vehicleUid && s.sale_date.startsWith(date)
+          ? { ...s, payment_status_text: "PAID" }
+          : s,
+      ),
+    );
+  }, []);
+
   return {
     sales,
     isLoadingSales,
@@ -159,5 +176,6 @@ export const useSales = () => {
     fetchAllSales,
     getSale,
     collectPayment,
+    collectVehiclePayment,
   };
 };

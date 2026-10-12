@@ -10,6 +10,7 @@ import {
   Wallet,
   CreditCard,
   RotateCcw,
+  HandCoins,
 } from "lucide-react";
 import { logout } from "@/services/api";
 
@@ -36,6 +37,12 @@ const dwNavItems = [
     label: "Reports",
     icon: FileBarChart,
     path: "/deliwheels/reports",
+  },
+  {
+    id: "collect-cash",
+    label: "Collect Cash",
+    icon: HandCoins,
+    path: "/deliwheels/collect-cash",
   },
   { id: "credits", label: "Credits", icon: CreditCard, path: "/deliwheels/credits" },
   { id: "returns", label: "Returns", icon: RotateCcw, path: "/deliwheels/returns" },
