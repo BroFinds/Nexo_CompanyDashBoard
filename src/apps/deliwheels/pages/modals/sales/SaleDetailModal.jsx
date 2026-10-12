@@ -143,26 +143,39 @@ const SaleDetailModal = ({ sale, loading, error, onClose }) => {
             />
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              flexWrap: "wrap",
-            }}
-          >
-            <Badge variant={paymentStatusVariant(sale.payment_status_text)}>
-              {sale.payment_status_text || "—"}
-            </Badge>
-            <span
-              style={{ fontSize: "0.85rem", color: "var(--color-text-subtle)" }}
-            >
-              Mode:{" "}
-              <strong style={{ color: "var(--color-text)" }}>
-                {sale.payment_mode_text || "—"}
-              </strong>
-            </span>
-          </div>
+          {(() => {
+            const nonZeroModes = [
+              sale.cash_amount > 0 && { label: "Cash", amount: sale.cash_amount },
+              sale.upi_amount > 0 && { label: "UPI", amount: sale.upi_amount },
+              sale.credit_amount > 0 && { label: "Credit", amount: sale.credit_amount },
+            ].filter(Boolean);
+            const isSplit = nonZeroModes.length > 1;
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                  <Badge variant={paymentStatusVariant(sale.payment_status_text)}>
+                    {sale.payment_status_text || "—"}
+                  </Badge>
+                  <span style={{ fontSize: "0.85rem", color: "var(--color-text-subtle)" }}>
+                    Mode:{" "}
+                    <strong style={{ color: "var(--color-text)" }}>
+                      {isSplit ? "Split" : sale.payment_mode_text || "—"}
+                    </strong>
+                  </span>
+                </div>
+                {isSplit && (
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    {nonZeroModes.map(({ label, amount }) => (
+                      <div key={label} style={{ padding: "4px 10px", borderRadius: "6px", background: "var(--bg-body)", border: "1px solid var(--border-subtle)", fontSize: "0.8rem" }}>
+                        <span style={{ color: "var(--color-text-subtle)" }}>{label}: </span>
+                        <strong style={{ fontFamily: "monospace" }}>₹{formatMoney(amount)}</strong>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           <div>
             <h4

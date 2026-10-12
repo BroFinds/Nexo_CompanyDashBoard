@@ -61,9 +61,28 @@ const CollectPaymentModal = ({ sale, onClose, onConfirm }) => {
           <Row label={<><Calendar size={13} style={{ display: "inline", marginRight: 4 }} />Sale Date</>}>
             {formatSaleDate(sale.sale_date)}
           </Row>
-          <Row label="Payment Mode">
-            <span style={{ textTransform: "capitalize" }}>{sale.payment_mode_text || "—"}</span>
-          </Row>
+          {(() => {
+            const nonZeroModes = [
+              sale.cash_amount > 0 && { label: "Cash", amount: sale.cash_amount },
+              sale.upi_amount > 0 && { label: "UPI", amount: sale.upi_amount },
+              sale.credit_amount > 0 && { label: "Credit", amount: sale.credit_amount },
+            ].filter(Boolean);
+            const isSplit = nonZeroModes.length > 1;
+            return (
+              <>
+                <Row label="Payment Mode">
+                  <span style={{ textTransform: "capitalize" }}>
+                    {isSplit ? "Split" : sale.payment_mode_text || "—"}
+                  </span>
+                </Row>
+                {isSplit && nonZeroModes.map(({ label, amount }) => (
+                  <Row key={label} label={`  └ ${label}`}>
+                    <span style={{ fontFamily: "monospace", color: "var(--color-text-subtle)" }}>₹{formatMoney(amount)}</span>
+                  </Row>
+                ))}
+              </>
+            );
+          })()}
           <Row label="Current Status">
             <Badge variant={paymentStatusVariant(sale.payment_status_text)}>
               {sale.payment_status_text || "—"}

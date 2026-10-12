@@ -109,7 +109,8 @@ const SalesPage = () => {
 
   const isPaid = (s) =>
     (s.payment_status_text || "").toUpperCase() === "PAID" ||
-    (s.payment_mode_text || "").toUpperCase() === "CASH";
+    (s.payment_mode_text || "").toUpperCase() === "CASH" ||
+    (s.cash_amount > 0 && s.upi_amount === 0 && s.credit_amount === 0);
   const paidRevenue = visibleSales.reduce(
     (sum, s) => (isPaid(s) ? sum + Number(s.grand_total || 0) : sum),
     0,
