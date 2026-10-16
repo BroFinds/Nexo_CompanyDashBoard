@@ -128,11 +128,26 @@ const SalesPage = () => {
   );
   const creditCount = visibleSales.filter(isCredit).length;
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   const clearFilters = () => {
     setSearchTerm("");
     setFilterVehicle("all");
     setFilterFromDate("");
     setFilterToDate("");
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const filters = {};
+      if (filterVehicle !== "all") filters.vehicleUid = filterVehicle;
+      if (filterFromDate) filters.fromDate = filterFromDate;
+      if (filterToDate) filters.toDate = filterToDate;
+      await searchSales(filters);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   return (
@@ -162,7 +177,38 @@ const SalesPage = () => {
             Track invoices, payments, and revenue.
           </p>
         </div>
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing || isLoadingSales}
+          title="Refresh sales"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "8px 14px",
+            borderRadius: "8px",
+            border: "1px solid var(--color-border)",
+            background: "var(--color-surface)",
+            color: "var(--color-text)",
+            fontSize: "var(--text-sm)",
+            fontWeight: "500",
+            cursor: isRefreshing || isLoadingSales ? "not-allowed" : "pointer",
+            opacity: isRefreshing || isLoadingSales ? 0.6 : 1,
+            transition: "opacity 0.15s",
+          }}
+        >
+          <span
+            style={{
+              display: "inline-block",
+              animation: isRefreshing ? "spin 0.8s linear infinite" : "none",
+            }}
+          >
+            ↻
+          </span>
+          {isRefreshing ? "Refreshing…" : "Refresh"}
+        </button>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       <SalesStats
         showResults={showResults}
