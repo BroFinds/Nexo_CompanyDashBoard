@@ -159,6 +159,11 @@ export const useStock = () => {
     return data;
   }, []);
 
+  const fetchStockEntry = useCallback(async (stockUid) => {
+    const { data } = await api.get(`/api/v1/deliwheels/stock-added/${stockUid}`);
+    return mapStockAdded(data);
+  }, []);
+
   const deleteStockEntry = useCallback(async (stockUid) => {
     await api.delete(`/api/v1/deliwheels/stock-added/${stockUid}`);
     setStock((prev) => prev.filter((s) => s.stock_uid !== stockUid));
@@ -176,6 +181,7 @@ export const useStock = () => {
     addStockLoading,
     updateStock,
     fetchStockLogs,
+    fetchStockEntry,
     deleteStockEntry,
   };
 };
