@@ -37,6 +37,7 @@ const StockPage = () => {
     updateStock,
     assignRoute,
     fetchStockLogs,
+    fetchStockEntry,
     deleteStockEntry,
   } = useDeliwheels();
   const { products } = useGlobal();
@@ -150,15 +151,25 @@ const StockPage = () => {
       setLogsError(null);
       setIsLoadingLogs(true);
       try {
-        const allLogsArrays = await Promise.all(
-          delivery.entries.map((entry) =>
-            fetchStockLogs(entry.stock_uid)
-              .then((data) =>
-                (data || []).map((log) => ({ ...log, product_name: entry.product_name }))
-              )
-              .catch(() => [])
-          )
-        );
+        const [freshEntries, allLogsArrays] = await Promise.all([
+          Promise.all(
+            delivery.entries.map((entry) =>
+              fetchStockEntry(entry.stock_uid).catch(() => entry)
+            )
+          ),
+          Promise.all(
+            delivery.entries.map((entry) =>
+              fetchStockLogs(entry.stock_uid)
+                .then((data) =>
+                  (data || []).map((log) => ({ ...log, product_name: entry.product_name }))
+                )
+                .catch(() => [])
+            )
+          ),
+        ]);
+
+        setLogsEntry({ ...delivery, entries: freshEntries });
+
         const combined = allLogsArrays
           .flat()
           .sort((a, b) => new Date(b.saleDate || 0) - new Date(a.saleDate || 0));
@@ -169,7 +180,7 @@ const StockPage = () => {
         setIsLoadingLogs(false);
       }
     },
-    [fetchStockLogs],
+    [fetchStockLogs, fetchStockEntry],
   );
 
   const handleCloseLogs = () => {
