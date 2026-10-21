@@ -5,8 +5,7 @@ import ShopFormModal from "./modals/shops/ShopFormModal";
 import ShopDetailModal from "./modals/shops/ShopDetailModal";
 import Card from "@shared/components/ui/Card";
 import Skeleton from "@shared/components/ui/Skeleton";
-import Button from "@shared/components/ui/Button";
-import { Search, Store, Plus } from "lucide-react";
+import { Search, Store } from "lucide-react";
 import { useDeliwheels } from "../context/DeliwheelsContext";
 
 const ShopsPage = () => {
@@ -16,7 +15,6 @@ const ShopsPage = () => {
     shopsHasMore,
     shopsLoaded,
     fetchAllShops,
-    addShop,
     updateShop,
     setShopStatus,
     routes,
@@ -56,11 +54,6 @@ const ShopsPage = () => {
 
   const activeShops = filtered.filter((s) => s.status === "active");
   const inactiveShops = filtered.filter((s) => s.status !== "active");
-
-  const handleOpenAdd = () => {
-    setEditingShop(null);
-    setIsFormOpen(true);
-  };
 
   const handleEditClick = (shop) => {
     setEditingShop(shop);
@@ -220,11 +213,8 @@ const ShopsPage = () => {
               </div>
               <p style={{ fontWeight: "600", fontSize: "1rem" }}>No shops yet</p>
               <p style={{ fontSize: "0.85rem", textAlign: "center", maxWidth: "280px" }}>
-                Add shops to define the delivery stops on each route. Drivers will see these as deliveries in the mobile app.
+                Shops are added by drivers from the DeliWheels mobile app and will appear here once synced.
               </p>
-              <Button onClick={handleOpenAdd} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <Plus size={16} /> Add First Shop
-              </Button>
             </div>
           )}
 
@@ -249,7 +239,6 @@ const ShopsPage = () => {
         onClose={() => setIsFormOpen(false)}
         initialShop={editingShop}
         routes={routes}
-        onAdd={addShop}
         onUpdate={updateShop}
       />
     </DeliwheelsLayout>

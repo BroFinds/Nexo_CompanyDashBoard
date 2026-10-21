@@ -29,10 +29,8 @@ const StockFormModal = ({
   initialEntry,
   products,
   vehicles,
-  routes,
   onAdd,
   onUpdate,
-  onAssignRoute,
 }) => {
   const isEditMode = !!initialEntry;
 
@@ -41,7 +39,6 @@ const StockFormModal = ({
 
   // ── Add mode state ────────────────────────────────────────────────────────
   const [vehicleUid, setVehicleUid] = useState("");
-  const [routeUid, setRouteUid] = useState("");
   // list of { id, product_uid, quantity }
   const [items, setItems] = useState([]);
   // current picker row
@@ -60,7 +57,6 @@ const StockFormModal = ({
     } else {
       setEditForm(EMPTY_EDIT_FORM);
       setVehicleUid("");
-      setRouteUid("");
       setItems([]);
       setPickerProduct("");
       setPickerQty(1);
@@ -77,16 +73,11 @@ const StockFormModal = ({
     onClose();
   };
 
-  const activeRoutes = (routes || []).filter((r) => r.status === "active");
-  const activeVehicles = vehicles.filter((v) => v.status === "active");
-  const selectedVehicle = vehicles.find((v) => v.vehicle_uid === vehicleUid);
-  const vehicleNeedsRoute = !!vehicleUid && !selectedVehicle?.route_uid;
+  // Stock can only be loaded onto active vehicles that already have a route.
+  const loadableVehicles = vehicles.filter((v) => v.status === "active" && v.route_uid);
 
-  const handleVehicleChange = (e) => {
-    const uid = e.target.value;
-    const v = vehicles.find((veh) => veh.vehicle_uid === uid);
+  const handleVehicleChange = (uid) => {
     setVehicleUid(uid);
-    setRouteUid(v?.route_uid || "");
     if (formError) setFormError("");
   };
 
@@ -101,7 +92,7 @@ const StockFormModal = ({
     }
     setItems((prev) => [...prev, { id: Date.now(), product_uid: pickerProduct, quantity: qty }]);
     setPickerProduct("");
-    setPickerQty("");
+    setPickerQty(1);
     setFormError("");
   };
 
@@ -128,10 +119,6 @@ const StockFormModal = ({
 
     // Add mode
     if (!vehicleUid) { setFormError("Please select a vehicle."); return; }
-    if (vehicleNeedsRoute && !routeUid) {
-      setFormError("This vehicle has no route yet. Please select a route to assign.");
-      return;
-    }
     if (items.length === 0) { setFormError("Add at least one product to the list."); return; }
     const invalidItem = items.find((i) => !i.quantity || isNaN(parseInt(i.quantity, 10)) || parseInt(i.quantity, 10) <= 0);
     if (invalidItem) {
@@ -142,9 +129,6 @@ const StockFormModal = ({
 
     setIsSubmitting(true);
     try {
-      if (vehicleNeedsRoute && routeUid && onAssignRoute) {
-        await onAssignRoute(vehicleUid, routeUid);
-      }
       for (const item of items) {
         await onAdd(item.product_uid, parseInt(item.quantity, 10), vehicleUid);
       }
@@ -164,7 +148,7 @@ const StockFormModal = ({
     setSuccessMsg("");
     setItems([]);
     setPickerProduct("");
-    setPickerQty("");
+    setPickerQty(1);
     setFormError("");
   };
 
@@ -179,13 +163,13 @@ const StockFormModal = ({
       onClose={handleClose}
       title={isEditMode ? "Edit Stock Entry" : "Add Stock to Vehicle"}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div className="stock-form" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         {successMsg ? (
           <>
             <div style={{ padding: "16px", borderRadius: "10px", background: "#d1fae5", color: "#065f46", textAlign: "center", fontWeight: "600", fontSize: "0.9rem" }}>
               {successMsg}
             </div>
-            <div style={{ display: "flex", gap: "10px" }}>
+            <div className="stock-form-actions" style={{ display: "flex", gap: "10px" }}>
               {!isEditMode && (
                 <Button variant="secondary" onClick={handleLoadAnother} fullWidth>
                   Load Another Vehicle
@@ -229,31 +213,52 @@ const StockFormModal = ({
             {/* Vehicle */}
             <div>
               <label style={labelStyle}>Vehicle *</label>
-              <select value={vehicleUid} onChange={handleVehicleChange} style={fieldStyle}>
-                <option value="">— Select a vehicle —</option>
-                {activeVehicles.map((v) => (
-                  <option key={v.vehicle_uid} value={v.vehicle_uid}>
-                    {v.registration} — {v.model}{!v.route_uid ? " (no route)" : ""}
-                  </option>
-                ))}
-              </select>
+              <SearchableSelect
+                options={loadableVehicles.map((v) => ({
+                  value: v.vehicle_uid,
+                  label: v.registration,
+                  sub: [v.model, v.driver !== "Unassigned" ? v.driver : ""].filter(Boolean).join(" · "),
+                }))}
+                value={vehicleUid}
+                onChange={handleVehicleChange}
+                placeholder="Search for a vehicle..."
+                noResultsText="No vehicles found"
+              />
+              <p style={{ fontSize: "0.75rem", color: "var(--color-text-subtle)", marginTop: "4px" }}>
+                Only active vehicles with a route are listed.
+              </p>
             </div>
 
-            {/* Route assignment if vehicle has none */}
-            {vehicleNeedsRoute && (
-              <div>
-                <label style={labelStyle}>Assign Route *</label>
-                <select value={routeUid} onChange={(e) => { setRouteUid(e.target.value); setFormError(""); }} style={fieldStyle}>
-                  <option value="">— Select a route —</option>
-                  {activeRoutes.map((r) => (
-                    <option key={r.route_uid} value={r.route_uid}>{r.origin} → {r.destination}</option>
-                  ))}
-                </select>
-                <p style={{ fontSize: "0.75rem", color: "var(--color-text-subtle)", marginTop: "4px" }}>
-                  This vehicle has no route assigned. Select one now — it will be saved to the vehicle.
-                </p>
-              </div>
-            )}
+            {/* Product picker — stacked under Vehicle, same width */}
+            <div>
+              <label style={labelStyle}>{items.length === 0 ? "Product *" : "Add Another Product"}</label>
+              <SearchableSelect
+                options={availableProducts.map((p) => ({ value: p.product_uid, label: p.product_name, sub: p.product_code }))}
+                value={pickerProduct}
+                onChange={(val) => { setPickerProduct(val); if (formError) setFormError(""); }}
+                placeholder="Search for a product..."
+                noResultsText="No products found"
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Quantity *</label>
+              <input
+                type="number"
+                min="1"
+                inputMode="numeric"
+                value={pickerQty}
+                onChange={(e) => setPickerQty(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddItem(); } }}
+                style={fieldStyle}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleAddItem}
+              style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--color-primary)", background: "var(--color-primary-subtle)", color: "var(--color-primary)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontWeight: "600", fontSize: "0.9rem" }}
+            >
+              <Plus size={16} /> Add to List
+            </button>
 
             {/* Added products list */}
             {items.length > 0 && (
@@ -292,37 +297,6 @@ const StockFormModal = ({
               </div>
             )}
 
-            {/* Product picker row */}
-            <div style={{ display: "flex", gap: "10px", alignItems: "flex-end" }}>
-              <div style={{ flex: 1 }}>
-                <label style={labelStyle}>{items.length === 0 ? "Product *" : "Add Another Product"}</label>
-                <SearchableSelect
-                  options={availableProducts.map((p) => ({ value: p.product_uid, label: p.product_name, sub: p.product_code }))}
-                  value={pickerProduct}
-                  onChange={(val) => { setPickerProduct(val); if (formError) setFormError(""); }}
-                  placeholder="Search for a product..."
-                  noResultsText="No products found"
-                />
-              </div>
-              <div style={{ width: "90px", flexShrink: 0 }}>
-                <label style={labelStyle}>Qty</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={pickerQty}
-                  onChange={(e) => setPickerQty(e.target.value)}
-                  style={{ ...fieldStyle, textAlign: "center" }}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={handleAddItem}
-                style={{ flexShrink: 0, padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--color-primary)", background: "var(--color-primary-subtle)", color: "var(--color-primary)", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontWeight: "600", fontSize: "0.85rem", marginBottom: "0px" }}
-              >
-                <Plus size={15} /> Add
-              </button>
-            </div>
-
             {formError && (
               <p style={{ color: "#ef4444", fontSize: "0.85rem", background: "#fee2e2", padding: "8px 12px", borderRadius: "8px" }}>
                 {formError}
@@ -346,7 +320,14 @@ const StockFormModal = ({
           </>
         )}
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 520px) {
+          .stock-form-actions { flex-direction: column-reverse; }
+          /* 16px stops iOS Safari zooming in when a field is focused. */
+          .stock-form input, .stock-form select, .stock-form button[aria-haspopup] { font-size: 16px !important; }
+        }
+      `}</style>
     </Modal>
   );
 };

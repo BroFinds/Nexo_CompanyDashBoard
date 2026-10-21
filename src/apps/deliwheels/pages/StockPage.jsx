@@ -23,19 +23,15 @@ const StockPage = () => {
   const {
     stock,
     vehicles,
-    routes,
     isLoadingStock,
     stockHasMore,
     stockLoaded,
     vehiclesLoaded,
-    routesLoaded,
     fetchStock,
     searchStock,
     fetchVehicles,
-    fetchRoutes,
     addStockLoading,
     updateStock,
-    assignRoute,
     fetchStockLogs,
     fetchStockEntry,
     deleteStockEntry,
@@ -57,9 +53,8 @@ const StockPage = () => {
 
   useEffect(() => {
     if (!vehiclesLoaded) fetchVehicles();
-    if (!routesLoaded) fetchRoutes();
     if (!stockLoaded) searchStock({ fromDate: filterFromDate, toDate: filterToDate });
-  }, [vehiclesLoaded, routesLoaded, fetchVehicles, fetchRoutes, stockLoaded, searchStock]);
+  }, [vehiclesLoaded, fetchVehicles, stockLoaded, searchStock]);
 
   const hasCompleteDateRange = !!filterFromDate && !!filterToDate;
   const hasServerFilter =
@@ -289,10 +284,8 @@ const StockPage = () => {
         initialEntry={editingEntry}
         products={products.filter((p) => p.is_active !== false)}
         vehicles={vehicles}
-        routes={routes}
         onAdd={addStockLoading}
         onUpdate={updateStock}
-        onAssignRoute={assignRoute}
       />
 
       <StockDetailsModal

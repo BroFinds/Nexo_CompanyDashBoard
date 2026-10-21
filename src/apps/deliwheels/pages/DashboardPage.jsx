@@ -17,7 +17,6 @@ import {
   Banknote,
   Smartphone,
   Trophy,
-  X,
 } from "lucide-react";
 import { useDeliwheels } from "../context/DeliwheelsContext";
 import { useGlobal } from "../../nexo/context/GlobalContext";
@@ -75,7 +74,6 @@ const DashboardPage = () => {
   } = useDashboardSummary({ fromDate: dateRange.from, toDate: dateRange.to });
 
   const [isStockFormOpen, setIsStockFormOpen] = useState(false);
-  const [fabOpen, setFabOpen] = useState(false);
 
   useEffect(() => {
     fetchVehicles();
@@ -513,55 +511,6 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* Floating Action Button */}
-      <div className="dw-fab-wrap">
-        {fabOpen && (
-          <div className="dw-fab-menu">
-            <button
-              type="button"
-              className="dw-fab-menu-item"
-              onClick={() => {
-                setFabOpen(false);
-                setIsStockFormOpen(true);
-              }}
-            >
-              <Warehouse size={16} />
-              <span>Load Stock</span>
-            </button>
-            <button
-              type="button"
-              className="dw-fab-menu-item"
-              onClick={() => {
-                setFabOpen(false);
-                navigate("/deliwheels/sales");
-              }}
-            >
-              <Receipt size={16} />
-              <span>View Sales</span>
-            </button>
-            <button
-              type="button"
-              className="dw-fab-menu-item"
-              onClick={() => {
-                setFabOpen(false);
-                navigate("/deliwheels/reports");
-              }}
-            >
-              <FileBarChart size={16} />
-              <span>Reports</span>
-            </button>
-          </div>
-        )}
-        <button
-          type="button"
-          className={`dw-fab ${fabOpen ? "is-open" : ""}`}
-          aria-label={fabOpen ? "Close quick actions" : "Open quick actions"}
-          onClick={() => setFabOpen((v) => !v)}
-        >
-          {fabOpen ? <X size={22} /> : <Plus size={22} />}
-        </button>
-      </div>
-
       <StockFormModal
         isOpen={isStockFormOpen}
         onClose={() => setIsStockFormOpen(false)}
@@ -629,66 +578,6 @@ const DashboardPage = () => {
         }
         @media (max-width: 900px) {
           .today-grid-2 { grid-template-columns: 1fr; }
-        }
-
-        .dw-fab-wrap {
-          position: fixed;
-          right: 24px;
-          bottom: 24px;
-          z-index: 40;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 10px;
-        }
-        .dw-fab {
-          width: 56px;
-          height: 56px;
-          border-radius: 50%;
-          border: none;
-          cursor: pointer;
-          background: var(--color-primary, #6366f1);
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
-          transition: transform 0.2s ease, background 0.2s ease;
-        }
-        .dw-fab:hover { transform: scale(1.05); }
-        .dw-fab.is-open { background: #4338ca; }
-        .dw-fab-menu {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          background: var(--color-surface, white);
-          border: 1px solid var(--color-border, #e5e7eb);
-          border-radius: 12px;
-          padding: 6px;
-          box-shadow: 0 12px 28px rgba(0,0,0,0.12);
-          min-width: 180px;
-          animation: dwFabIn 0.15s ease;
-        }
-        .dw-fab-menu-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 10px 12px;
-          background: transparent;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 0.88rem;
-          font-weight: 600;
-          color: var(--color-text-main);
-          text-align: left;
-        }
-        .dw-fab-menu-item:hover {
-          background: var(--bg-body);
-        }
-        @keyframes dwFabIn {
-          from { opacity: 0; transform: translateY(6px); }
-          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </DeliwheelsLayout>

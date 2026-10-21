@@ -9,7 +9,6 @@ import { GlobalProvider } from "./apps/nexo/context/GlobalContext";
 import { DeliwheelsProvider } from "./apps/deliwheels/context/DeliwheelsContext";
 import WorkspaceInitGate from "./shared/components/init/WorkspaceInitGate";
 import "./index.css";
-import NovoApp from "./apps/novo/Novo";
 import { EnabledAppsProvider } from "./shared/context/EnabledAppsContext";
 
 // Authenticated shell: providers and the workspace init gate live above the
@@ -47,16 +46,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           element={
             <AuthenticatedShell>
               <DeliwheelsApp />
-            </AuthenticatedShell>
-          }
-        />
-
-        {/* Nova — auth required */}
-        <Route
-          path="/nova/*"
-          element={
-            <AuthenticatedShell>
-              <NovoApp />
             </AuthenticatedShell>
           }
         />

@@ -40,7 +40,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '500px' }) => {
         className="animate-in"
         style={{
           position: 'relative',
-          width: 'calc(100% - 32px)',
+          width: '100%', // the overlay's padding already provides the side gutter
           maxWidth: maxWidth,
           backgroundColor: 'var(--bg-surface)',
           borderRadius: 'var(--radius-lg)',

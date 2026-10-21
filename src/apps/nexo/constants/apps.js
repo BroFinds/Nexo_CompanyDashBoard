@@ -4,7 +4,6 @@ import {
   Warehouse,
   CreditCard,
   Package,
-  Bot,
 } from "lucide-react";
 
 // Single source of truth for all Nexo-launchable apps.
@@ -17,14 +16,6 @@ export const ALL_APPS = [
     icon: Truck,
     route: "/deliwheels",
     service: "deliwheels",
-  },
-  {
-    id: "nova",
-    title: "Nova",
-    desc: "AI Receptionist & Customer Assistant",
-    icon: Bot,
-    route: "/nova",
-    service: "nova",
   },
   {
     id: "employee_management",

@@ -26,8 +26,8 @@ const labelStyle = {
   marginBottom: "6px",
 };
 
-const ShopFormModal = ({ isOpen, onClose, initialShop, routes, onAdd, onUpdate }) => {
-  const isEditMode = !!initialShop;
+// Edit-only: shops are created by drivers from the mobile app, not by admins.
+const ShopFormModal = ({ isOpen, onClose, initialShop, routes, onUpdate }) => {
   const [formData, setFormData] = useState({ ...EMPTY_SHOP });
   const [formError, setFormError] = useState("");
 
@@ -61,11 +61,7 @@ const ShopFormModal = ({ isOpen, onClose, initialShop, routes, onAdd, onUpdate }
       return;
     }
     try {
-      if (isEditMode) {
-        await onUpdate(formData);
-      } else {
-        await onAdd(formData);
-      }
+      await onUpdate(formData);
       onClose();
     } catch (e) {
       setFormError(e.response?.data?.message || "Failed to save shop. Try again.");
@@ -78,7 +74,7 @@ const ShopFormModal = ({ isOpen, onClose, initialShop, routes, onAdd, onUpdate }
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEditMode ? "Edit Shop" : "Add New Shop"}
+      title="Edit Shop"
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         <div>
@@ -151,7 +147,7 @@ const ShopFormModal = ({ isOpen, onClose, initialShop, routes, onAdd, onUpdate }
         )}
 
         <Button onClick={handleSave} fullWidth size="lg">
-          {isEditMode ? "Save Changes" : "Add Shop"}
+          Save Changes
         </Button>
       </div>
     </Modal>

@@ -94,26 +94,6 @@ export const useShops = () => {
     await fetchAllShops();
   }, [fetchAllShops]);
 
-  const addShop = useCallback(async (formData) => {
-    const session = getSession();
-    try {
-      const { data } = await api.post("/api/v1/deliwheels/shops", {
-        companyUid: session.companyId,
-        routeUid: formData.route_uid,
-        shopName: formData.shop_name?.trim() || "",
-        shopOwnerName: formData.shop_owner_name.trim(),
-        shopContactNumber: formData.shop_contact_number.trim(),
-        isActive: true,
-      });
-      const mapped = mapShop(data);
-      setShops((prev) => [mapped, ...prev]);
-      return mapped;
-    } catch (e) {
-      console.error("addShop:", e);
-      throw e;
-    }
-  }, []);
-
   const updateShop = useCallback(async (formData) => {
     const session = getSession();
     const uid = formData.shop_uid;
@@ -159,7 +139,6 @@ export const useShops = () => {
     fetchAllShops,
     filterShops,
     refreshShops,
-    addShop,
     updateShop,
     setShopStatus,
   };
