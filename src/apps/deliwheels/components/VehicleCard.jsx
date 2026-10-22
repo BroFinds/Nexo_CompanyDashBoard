@@ -1,15 +1,15 @@
 import React from 'react';
 import Card from '@shared/components/ui/Card';
 import Badge from '@shared/components/ui/Badge';
-import { Truck, CheckCircle2 } from 'lucide-react';
+import { Truck } from 'lucide-react';
 
 const getStatusVariant = (s) => s === 'active' ? 'success' : s === 'maintenance' ? 'warning' : 'danger';
 
-const DeliveryProgress = ({ totalQty, remainingQty, isComplete }) => {
+const DeliveryProgress = ({ totalQty, remainingQty }) => {
   if (!totalQty || totalQty === 0) return null;
   const delivered = totalQty - remainingQty;
   const pct = Math.min(100, Math.round((delivered / totalQty) * 100));
-  const barColor = isComplete ? '#16a34a' : pct >= 80 ? '#059669' : pct >= 40 ? '#2563eb' : '#d97706';
+  const barColor = pct >= 80 ? '#059669' : pct >= 40 ? '#2563eb' : '#d97706';
 
   return (
     <div style={{ marginTop: '10px' }}>
@@ -50,19 +50,6 @@ const VehicleCard = ({ vehicle, driverName, onClick, deliveryStatus }) => (
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
         <Badge variant={getStatusVariant(vehicle.status)}>{vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1)}</Badge>
-        {deliveryStatus?.hasActiveDelivery && (
-          deliveryStatus.isComplete ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', fontWeight: '600', color: '#16a34a', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '999px', padding: '2px 8px' }}>
-              <CheckCircle2 size={11} />
-              Completed
-            </span>
-          ) : (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', fontWeight: '600', color: '#d97706', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '999px', padding: '2px 8px' }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#d97706', display: 'inline-block' }} />
-              Ongoing
-            </span>
-          )
-        )}
       </div>
     </div>
 
@@ -74,7 +61,6 @@ const VehicleCard = ({ vehicle, driverName, onClick, deliveryStatus }) => (
       <DeliveryProgress
         totalQty={deliveryStatus.totalQty}
         remainingQty={deliveryStatus.remainingQty}
-        isComplete={deliveryStatus.isComplete}
       />
     )}
 

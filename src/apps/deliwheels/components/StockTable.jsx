@@ -6,20 +6,6 @@ import { Truck, Calendar, ChevronRight } from "lucide-react";
 import useInfiniteScroll from "@shared/hooks/useInfiniteScroll";
 import InfiniteScrollLoader from "@shared/components/ui/InfiniteScrollLoader";
 
-const StatusBadge = ({ isComplete }) => (
-  <span style={{
-    display: "inline-flex", alignItems: "center", gap: "5px",
-    padding: "4px 10px", borderRadius: "999px", fontSize: "0.72rem", fontWeight: "700",
-    whiteSpace: "nowrap",
-    background: isComplete ? "#f0fdf4" : "#fffbeb",
-    color: isComplete ? "#16a34a" : "#d97706",
-    border: `1px solid ${isComplete ? "#86efac" : "#fde68a"}`,
-  }}>
-    <span style={{ width: 6, height: 6, borderRadius: "50%", background: isComplete ? "#16a34a" : "#d97706", display: "inline-block" }} />
-    {isComplete ? "Done" : "In Progress"}
-  </span>
-);
-
 const ProgressBar = ({ total, delivered }) => {
   if (!total) return <span style={{ color: "var(--color-text-subtle)", fontSize: "0.8rem" }}>—</span>;
   const pct = Math.min(100, Math.round((delivered / total) * 100));
@@ -63,7 +49,7 @@ const StockTable = ({
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid var(--border-subtle)", backgroundColor: "var(--bg-body)" }}>
-              {["Delivery", "Progress", "Status", ""].map((h) => (
+              {["Delivery", "Progress", ""].map((h) => (
                 <th key={h} style={{
                   position: "sticky", top: 0, zIndex: 10,
                   backgroundColor: "var(--bg-body)", padding: "14px 16px",
@@ -83,7 +69,7 @@ const StockTable = ({
                   <Skeleton width="160px" height="18px" style={{ marginBottom: "8px" }} />
                   <Skeleton width="110px" height="13px" />
                 </td>
-                {[1, 2, 3].map((j) => (
+                {[1, 2].map((j) => (
                   <td key={j} style={{ padding: "16px" }}><Skeleton width="90px" height="16px" /></td>
                 ))}
               </tr>
@@ -118,11 +104,6 @@ const StockTable = ({
                   <ProgressBar total={delivery.totalQty} delivered={delivery.deliveredQty} />
                 </td>
 
-                {/* Status */}
-                <td style={{ padding: "14px 16px" }}>
-                  <StatusBadge isComplete={delivery.is_delivery_complete} />
-                </td>
-
                 {/* Details */}
                 <td style={{ padding: "14px 16px" }}>
                   <Button
@@ -139,7 +120,7 @@ const StockTable = ({
             {/* Empty */}
             {stockLoaded && !isLoadingStock && deliveries.length === 0 && (
               <tr>
-                <td colSpan={4} style={{ textAlign: "center", padding: "48px", color: "var(--color-text-subtle)" }}>
+                <td colSpan={3} style={{ textAlign: "center", padding: "48px", color: "var(--color-text-subtle)" }}>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
                     <Truck size={28} style={{ opacity: 0.3 }} />
                     <p style={{ fontWeight: "600" }}>No deliveries found</p>
@@ -150,7 +131,7 @@ const StockTable = ({
             )}
 
             <tr>
-              <td colSpan={4} style={{ padding: 0, border: "none" }}>
+              <td colSpan={3} style={{ padding: 0, border: "none" }}>
                 <div ref={sentinelRef} style={{ height: "1px" }} />
                 {isLoadingStock && deliveries.length > 0 && <InfiniteScrollLoader style={{ padding: "12px" }} />}
               </td>

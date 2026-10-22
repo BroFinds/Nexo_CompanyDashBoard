@@ -75,16 +75,6 @@ const StockDetailsModal = ({ delivery, logs, loading, error, onClose, products, 
               </div>
             </div>
           </div>
-          <span style={{
-            display: "inline-flex", alignItems: "center", gap: "5px",
-            padding: "5px 12px", borderRadius: "999px", fontSize: "0.75rem", fontWeight: "700",
-            background: delivery.is_delivery_complete ? "#f0fdf4" : "#fffbeb",
-            color: delivery.is_delivery_complete ? "#16a34a" : "#d97706",
-            border: `1px solid ${delivery.is_delivery_complete ? "#86efac" : "#fde68a"}`,
-          }}>
-            {delivery.is_delivery_complete ? <CheckCircle size={13} /> : <Clock size={13} />}
-            {delivery.is_delivery_complete ? "Delivery Complete" : "In Progress"}
-          </span>
         </div>
 
         {/* Aggregate stats */}
@@ -274,12 +264,6 @@ const StockDetailsModal = ({ delivery, logs, loading, error, onClose, products, 
         )}
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-          {delivery.is_delivery_complete && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", color: "#16a34a", fontWeight: "600" }}>
-              <CheckCircle size={14} /> Delivery already completed
-            </span>
-          )}
-
           <Button onClick={onClose} style={{ marginLeft: "auto" }}>Close</Button>
         </div>
       </div>

@@ -61,12 +61,10 @@ const VehiclesPage = () => {
       if (!map[vid]) {
         map[vid] = {
           hasActiveDelivery: true,
-          isComplete: true,
           totalQty: 0,
           remainingQty: 0,
         };
       }
-      if (!s.is_delivery_complete) map[vid].isComplete = false;
       map[vid].totalQty += s.quantity || 0;
       map[vid].remainingQty += s.remaining_quantity ?? s.quantity ?? 0;
     });

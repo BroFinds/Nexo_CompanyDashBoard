@@ -35,7 +35,6 @@ const StockPage = () => {
     deleteStockEntry,
   } = useDeliwheels();
   const { products } = useGlobal();
-  const [filterStatus, setFilterStatus] = useState("all");
   const [filterVehicle, setFilterVehicle] = useState("all");
   const [filterProduct, setFilterProduct] = useState("");
   const [filterFromDate, setFilterFromDate] = useState(todayISO);
@@ -75,16 +74,10 @@ const StockPage = () => {
     searchStock,
   ]);
 
-  const filteredStock = stock.filter((s) => {
-    if (filterStatus === "in_progress") return !s.is_delivery_complete;
-    if (filterStatus === "done") return !!s.is_delivery_complete;
-    return true;
-  });
-
   // Group individual stock entries by vehicle + date → one row per delivery day
   const groupedDeliveries = useMemo(() => {
     const groups = new Map();
-    filteredStock.forEach((s) => {
+    stock.forEach((s) => {
       const key = `${s.vehicle_uid}__${s.loaded_date}`;
       if (!groups.has(key)) {
         groups.set(key, {
@@ -92,7 +85,6 @@ const StockPage = () => {
           vehicle_uid: s.vehicle_uid,
           vehicle_number: s.vehicle_number,
           loaded_date: s.loaded_date,
-          is_delivery_complete: true,
           entries: [],
           totalQty: 0,
           deliveredQty: 0,
@@ -106,22 +98,19 @@ const StockPage = () => {
       g.totalQty += qty;
       g.remainingQty += rem;
       g.deliveredQty += Math.max(0, qty - rem);
-      if (!s.is_delivery_complete) g.is_delivery_complete = false;
     });
     return Array.from(groups.values())
       .sort((a, b) => b.loaded_date.localeCompare(a.loaded_date));
-  }, [filteredStock]);
+  }, [stock]);
 
   const hasActiveFilter =
-    filterStatus !== "all" ||
     filterVehicle !== "all" ||
     !!filterFromDate ||
     !!filterToDate;
   const showResults = stockLoaded;
-  const visibleStock = showResults ? filteredStock : [];
+  const visibleStock = showResults ? stock : [];
 
   const clearFilters = () => {
-    setFilterStatus("all");
     setFilterVehicle("all");
     setFilterFromDate("");
     setFilterToDate("");
@@ -229,8 +218,6 @@ const StockPage = () => {
       </div>
 
       <StockFilterBar
-        filterStatus={filterStatus}
-        setFilterStatus={setFilterStatus}
         filterVehicle={filterVehicle}
         setFilterVehicle={setFilterVehicle}
         filterFromDate={filterFromDate}

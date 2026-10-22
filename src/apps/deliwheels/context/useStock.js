@@ -17,7 +17,6 @@ export const mapStockAdded = (s) => ({
   delivered_quantity: parseFloat(s.deliveredQuantity ?? s.delivered_quantity ?? 0) || 0,
   remaining_quantity: parseFloat(s.remainingQuantity ?? s.remaining_quantity ?? s.totalQuantity ?? s.total_quantity ?? s.quantity ?? 0) || 0,
   loaded_date: (s.stockAddedDate || s.stock_added_date || s.createdAt || "").split("T")[0],
-  is_delivery_complete: !!(s.isDeliveryComplete ?? s.is_delivery_complete ?? false),
   created_at: s.createdAt || "",
   updated_at: s.updatedAt || "",
 });
