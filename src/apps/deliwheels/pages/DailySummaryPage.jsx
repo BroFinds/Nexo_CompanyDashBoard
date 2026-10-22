@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import DeliwheelsLayout from "../components/DeliwheelsLayout";
 import Card from "@shared/components/ui/Card";
 import Badge from "@shared/components/ui/Badge";
@@ -36,9 +36,49 @@ const th = {
   textTransform: "uppercase",
   letterSpacing: "0.04em",
   whiteSpace: "nowrap",
+  // Stays visible while an expanded list scrolls
+  position: "sticky",
+  top: 0,
+  zIndex: 1,
+  background: "var(--bg-body)",
 };
 const td = { padding: "12px 14px", whiteSpace: "nowrap" };
 const sectionTitle = { fontSize: "var(--text-lg)", fontWeight: "600", margin: "var(--spacing-xl) 0 12px" };
+
+// Long lists show the first 10 rows; "Show all" expands them inside a scrolling box
+const PREVIEW_ROWS = 10;
+const EXPANDED_MAX_HEIGHT = "480px";
+
+const useRowLimit = (rows) => {
+  const [expanded, setExpanded] = useState(false);
+  const hasMore = rows.length > PREVIEW_ROWS;
+  const toggle = useCallback(() => setExpanded((e) => !e), []);
+  const reset = useCallback(() => setExpanded(false), []);
+  return {
+    visible: expanded || !hasMore ? rows : rows.slice(0, PREVIEW_ROWS),
+    expanded,
+    hasMore,
+    toggle,
+    reset,
+  };
+};
+
+const ShowMore = ({ limit, total }) =>
+  limit.hasMore ? (
+    <button
+      type="button"
+      onClick={limit.toggle}
+      style={{ width: "100%", padding: "10px", border: "none", borderTop: "1px solid var(--border-subtle)", background: "transparent", color: "var(--color-primary)", fontWeight: "600", cursor: "pointer" }}
+    >
+      {limit.expanded ? "Show less" : `Show all (${total})`}
+    </button>
+  ) : null;
+
+const scrollBox = (limit) => ({
+  overflowX: "auto",
+  overflowY: limit.expanded ? "auto" : "visible",
+  maxHeight: limit.expanded ? EXPANDED_MAX_HEIGHT : "none",
+});
 
 const SummaryTile = ({ label, value, hint }) => (
   <Card>
@@ -77,6 +117,14 @@ const DailySummaryPage = () => {
     [vehicles],
   );
 
+  // Keep a vehicle selected: default to the first active one, and re-pick if it disappears
+  useEffect(() => {
+    if (activeVehicles.length === 0) return;
+    if (!activeVehicles.some((v) => v.vehicle_uid === selectedUid)) {
+      setSelectedUid(activeVehicles[0].vehicle_uid);
+    }
+  }, [activeVehicles, selectedUid]);
+
   useEffect(() => {
     if (!selectedUid || !date) return;
     const session = getSession();
@@ -114,6 +162,19 @@ const DailySummaryPage = () => {
   const stock = report?.stock || [];
   const sales = report?.sales || [];
   const returns = report?.returns || [];
+  const stockLimit = useRowLimit(stock);
+  const salesLimit = useRowLimit(sales);
+  const returnsLimit = useRowLimit(returns);
+  const { reset: resetStock } = stockLimit;
+  const { reset: resetSales } = salesLimit;
+  const { reset: resetReturns } = returnsLimit;
+
+  // A new vehicle or day starts with the lists collapsed again
+  useEffect(() => {
+    resetStock();
+    resetSales();
+    resetReturns();
+  }, [selectedUid, date, resetStock, resetSales, resetReturns]);
   const stockTotals = stock.reduce(
     (t, r) => ({
       loaded: t.loaded + Number(r.loaded_value || 0),
@@ -129,10 +190,27 @@ const DailySummaryPage = () => {
         <div>
           <h2 style={{ fontSize: "var(--text-2xl)", fontWeight: "700", letterSpacing: "-0.02em" }}>Daily Summary</h2>
           <p style={{ color: "var(--color-text-subtle)" }}>
-            Pick a vehicle to see its sales, stock and returns for the day.
+            Sales, stock and returns of one vehicle for the day.
           </p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          <label htmlFor="daily-summary-vehicle" style={{ fontSize: "0.85rem", color: "var(--color-text-subtle)", fontWeight: "600" }}>
+            Vehicle
+          </label>
+          <select
+            id="daily-summary-vehicle"
+            value={selectedUid || ""}
+            onChange={(e) => setSelectedUid(e.target.value)}
+            disabled={activeVehicles.length === 0}
+            style={{ padding: "8px 12px", border: "1px solid var(--border-subtle)", borderRadius: "8px", fontSize: "0.9rem", background: "var(--bg-card)", color: "var(--color-text)", minWidth: "200px", maxWidth: "100%" }}
+          >
+            {activeVehicles.length === 0 && <option value="">{vehiclesLoaded ? "No active vehicles" : "Loading…"}</option>}
+            {activeVehicles.map((v) => (
+              <option key={v.vehicle_uid} value={v.vehicle_uid}>
+                {v.registration || "—"} · {v.driver || "Unassigned"}
+              </option>
+            ))}
+          </select>
           <label htmlFor="daily-summary-date" style={{ fontSize: "0.85rem", color: "var(--color-text-subtle)", fontWeight: "600" }}>
             Date
           </label>
@@ -147,52 +225,13 @@ const DailySummaryPage = () => {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: "var(--spacing-lg)", alignItems: "flex-start", flexWrap: "wrap" }}>
-        {/* Vehicle list */}
-        <Card padding="none" style={{ flex: "0 0 260px", maxWidth: "100%" }}>
-          <div style={{ ...th, borderBottom: "1px solid var(--border-subtle)" }}>Active vehicles</div>
-          {!vehiclesLoaded && activeVehicles.length === 0 ? (
-            <div style={{ padding: "14px" }}>
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} width="100%" height="40px" style={{ marginBottom: "8px" }} />
-              ))}
-            </div>
-          ) : activeVehicles.length === 0 ? (
-            <div style={{ padding: "24px", textAlign: "center", color: "var(--color-text-subtle)" }}>No active vehicles.</div>
-          ) : (
-            activeVehicles.map((v) => {
-              const selected = v.vehicle_uid === selectedUid;
-              return (
-                <button
-                  key={v.vehicle_uid}
-                  type="button"
-                  onClick={() => setSelectedUid(v.vehicle_uid)}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    textAlign: "left",
-                    padding: "12px 14px",
-                    border: "none",
-                    borderBottom: "1px solid var(--border-subtle)",
-                    background: selected ? "var(--color-primary-subtle)" : "transparent",
-                    color: selected ? "var(--color-primary)" : "var(--color-text)",
-                    cursor: "pointer",
-                  }}
-                >
-                  <div style={{ fontFamily: "monospace", fontWeight: "700" }}>{v.registration || "—"}</div>
-                  <div style={{ fontSize: "0.8rem", color: "var(--color-text-subtle)" }}>{v.driver || "Unassigned"}</div>
-                </button>
-              );
-            })
-          )}
-        </Card>
-
+      <div>
         {/* Detail */}
-        <div style={{ flex: "1 1 520px", minWidth: 0 }}>
+        <div style={{ minWidth: 0 }}>
           {!selectedUid ? (
             <Card>
               <div style={{ textAlign: "center", padding: "40px", color: "var(--color-text-subtle)" }}>
-                Select a vehicle to see its daily summary.
+                {vehiclesLoaded ? "No active vehicles to show." : "Loading vehicles…"}
               </div>
             </Card>
           ) : error ? (
@@ -241,9 +280,9 @@ const DailySummaryPage = () => {
               </div>
 
               {/* Stock */}
-              <h3 style={sectionTitle}>Stock (wholesale value)</h3>
+              <h3 style={sectionTitle}>Stock (wholesale value){stock.length > 0 && ` · ${stock.length} products`}</h3>
               <Card padding="none">
-                <div style={{ overflowX: "auto" }}>
+                <div style={scrollBox(stockLimit)}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
                     <thead>
                       <tr style={{ borderBottom: "1px solid var(--border-subtle)", background: "var(--bg-body)" }}>
@@ -256,7 +295,7 @@ const DailySummaryPage = () => {
                       {stock.length === 0 ? (
                         <EmptyRow colSpan={6} text="No stock on this vehicle for the day." />
                       ) : (
-                        stock.map((r) => (
+                        stockLimit.visible.map((r) => (
                           <tr key={r.product_uid} style={{ borderBottom: "1px solid var(--border-subtle)" }}>
                             <td style={{ ...td, fontWeight: "600" }}>{r.product_name || "—"}</td>
                             <td style={td}>{qty(r.old_remaining)}</td>
@@ -282,12 +321,13 @@ const DailySummaryPage = () => {
                     )}
                   </table>
                 </div>
+                <ShowMore limit={stockLimit} total={stock.length} />
               </Card>
 
               {/* Sales with items */}
               <h3 style={sectionTitle}>Sales ({sales.length})</h3>
               <Card padding="none">
-                <div style={{ overflowX: "auto" }}>
+                <div style={scrollBox(salesLimit)}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
                     <thead>
                       <tr style={{ borderBottom: "1px solid var(--border-subtle)", background: "var(--bg-body)" }}>
@@ -300,7 +340,7 @@ const DailySummaryPage = () => {
                       {sales.length === 0 ? (
                         <EmptyRow colSpan={9} text="No sales on this day." />
                       ) : (
-                        sales.map((s) => {
+                        salesLimit.visible.map((s) => {
                           const open = !!openSales[s.sale_uid];
                           return (
                             <React.Fragment key={s.sale_uid}>
@@ -360,12 +400,13 @@ const DailySummaryPage = () => {
                     </tbody>
                   </table>
                 </div>
+                <ShowMore limit={salesLimit} total={sales.length} />
               </Card>
 
               {/* Returns */}
               <h3 style={sectionTitle}>Returns ({returns.length})</h3>
               <Card padding="none">
-                <div style={{ overflowX: "auto" }}>
+                <div style={scrollBox(returnsLimit)}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
                     <thead>
                       <tr style={{ borderBottom: "1px solid var(--border-subtle)", background: "var(--bg-body)" }}>
@@ -378,7 +419,7 @@ const DailySummaryPage = () => {
                       {returns.length === 0 ? (
                         <EmptyRow colSpan={4} text="No returns on this day." />
                       ) : (
-                        returns.map((r) => (
+                        returnsLimit.visible.map((r) => (
                           <tr key={r.returned_stock_uid} style={{ borderBottom: "1px solid var(--border-subtle)" }}>
                             <td style={{ ...td, fontWeight: "600" }}>{r.product_name || "—"}</td>
                             <td style={td}>{r.shop_name || "—"}</td>
@@ -390,6 +431,7 @@ const DailySummaryPage = () => {
                     </tbody>
                   </table>
                 </div>
+                <ShowMore limit={returnsLimit} total={returns.length} />
               </Card>
             </>
           )}
