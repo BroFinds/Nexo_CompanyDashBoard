@@ -10,7 +10,7 @@ import {
   Wallet,
   CreditCard,
   RotateCcw,
-  HandCoins,
+  ClipboardCheck,
   CalendarCheck,
   Settings2,
 } from "lucide-react";
@@ -38,12 +38,7 @@ const dwNavItems = [
     icon: FileBarChart,
     path: "/deliwheels/reports",
   },
-  {
-    id: "collect-cash",
-    label: "Collect Cash",
-    icon: HandCoins,
-    path: "/deliwheels/collect-cash",
-  },
+  { id: "approvals", label: "Approvals", icon: ClipboardCheck, path: "/deliwheels/approvals" },
   { id: "credits", label: "Credits", icon: CreditCard, path: "/deliwheels/credits" },
   { id: "returns", label: "Returns", icon: RotateCcw, path: "/deliwheels/returns" },
   // Set up once, rarely changed — grouped so the daily items stay at the top

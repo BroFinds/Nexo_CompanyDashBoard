@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import DeliwheelsLayout from "../components/DeliwheelsLayout";
-import StockStats from "../components/StockStats";
 import StockFilterBar from "../components/StockFilterBar";
 import StockTable from "../components/StockTable";
 import StockFormModal from "./modals/stock/StockFormModal";
@@ -9,7 +8,6 @@ import Button from "@shared/components/ui/Button";
 import { Plus } from "lucide-react";
 import { useDeliwheels } from "../context/DeliwheelsContext";
 import { useGlobal } from "../../nexo/context/GlobalContext";
-import api from "@/services/api";
 
 const todayISO = () => {
   const d = new Date();
@@ -195,23 +193,6 @@ const StockPage = () => {
     await searchStock(filters);
   };
 
-  const handleCompleteDelivery = async (vehicleUid) => {
-    try {
-      await api.put(`/api/v1/deliwheels/stock-added/vehicle/${vehicleUid}/complete-delivery`);
-      // Refresh stock so grouped rows update their status
-      const filters = {};
-      if (filterVehicle !== "all") filters.vehicleUid = filterVehicle;
-      if (filterFromDate && filterToDate) {
-        filters.fromDate = filterFromDate;
-        filters.toDate = filterToDate;
-      }
-      await searchStock(filters);
-      handleCloseLogs();
-    } catch (e) {
-      alert("Failed to complete delivery: " + (e?.response?.data?.message ?? e?.message ?? "Unknown error"));
-    }
-  };
-
   return (
     <DeliwheelsLayout
       headerTitle="Stock"
@@ -246,13 +227,6 @@ const StockPage = () => {
           <Plus size={16} /> Add Stock
         </Button>
       </div>
-
-      <StockStats
-        showResults={showResults}
-        entryCount={groupedDeliveries.length}
-        inProgressCount={groupedDeliveries.filter((d) => !d.is_delivery_complete).length}
-        doneCount={groupedDeliveries.filter((d) => d.is_delivery_complete).length}
-      />
 
       <StockFilterBar
         filterStatus={filterStatus}
@@ -295,7 +269,6 @@ const StockPage = () => {
         error={logsError}
         onClose={handleCloseLogs}
         products={products}
-        onCompleteDelivery={handleCompleteDelivery}
         onDeleteDelivery={handleDeleteDelivery}
       />
     </DeliwheelsLayout>

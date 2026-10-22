@@ -110,8 +110,9 @@ export const useStock = () => {
     return all;
   }, []);
 
+  // businessDate: the day the load is for ("YYYY-MM-DD"); empty = today, or tomorrow once today is closed
   const addStockLoading = useCallback(
-    async (productUid, quantity, vehicleUid) => {
+    async (productUid, quantity, vehicleUid, businessDate) => {
       const session = getSession();
       try {
         const { data } = await api.post("/api/v1/deliwheels/stock-added", {
@@ -120,6 +121,7 @@ export const useStock = () => {
           productUid,
           totalQuantity: quantity,
           stockAddedDate: toLocalDateTime(),
+          businessDate: businessDate || null,
           createdBy: session.userId,
         });
         const mapped = mapStockAdded(data);

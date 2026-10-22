@@ -12,7 +12,6 @@ import { useGlobal } from "../../nexo/context/GlobalContext";
 import { useStock } from "../context/useStock";
 import useInfiniteScroll from "@shared/hooks/useInfiniteScroll";
 import InfiniteScrollLoader from "@shared/components/ui/InfiniteScrollLoader";
-import api from "@/services/api";
 
 const VehiclesPage = () => {
   const {
@@ -73,16 +72,6 @@ const VehiclesPage = () => {
     });
     return map;
   }, [stock, today]);
-
-  const handleCompleteDelivery = async (vehicle) => {
-    if (!window.confirm(`Mark delivery as complete for ${vehicle.registration || vehicle.vehicle_uid}?`)) return;
-    try {
-      await api.put(`/api/v1/deliwheels/stock-added/vehicle/${vehicle.vehicle_uid}/complete-delivery`);
-      searchStock({ fromDate: today, toDate: today });
-    } catch (e) {
-      alert("Failed to complete delivery: " + (e?.response?.data?.message ?? e?.message ?? "Unknown error"));
-    }
-  };
 
   const sentinelRef = useInfiniteScroll({
     hasMore: vehiclesHasMore,
@@ -230,7 +219,6 @@ const VehiclesPage = () => {
             onCardClick={setSelectedVehicle}
             getDriverName={getDriverName}
             deliveryStatusMap={deliveryStatusMap}
-            onCompleteDelivery={handleCompleteDelivery}
             style={{ marginBottom: "var(--spacing-xl)" }}
           />
 

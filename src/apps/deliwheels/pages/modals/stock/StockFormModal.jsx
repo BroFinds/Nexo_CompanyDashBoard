@@ -23,6 +23,11 @@ const labelStyle = {
 
 const EMPTY_EDIT_FORM = { product_uid: "", quantity: 1, route_uid: "", vehicle_uid: "" };
 
+const todayISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
 const StockFormModal = ({
   isOpen,
   onClose,
@@ -39,6 +44,8 @@ const StockFormModal = ({
 
   // ── Add mode state ────────────────────────────────────────────────────────
   const [vehicleUid, setVehicleUid] = useState("");
+  // The day the load is for; empty lets the server choose (today, or tomorrow once today is closed)
+  const [forDate, setForDate] = useState("");
   // list of { id, product_uid, quantity }
   const [items, setItems] = useState([]);
   // current picker row
@@ -57,6 +64,7 @@ const StockFormModal = ({
     } else {
       setEditForm(EMPTY_EDIT_FORM);
       setVehicleUid("");
+      setForDate("");
       setItems([]);
       setPickerProduct("");
       setPickerQty(1);
@@ -133,7 +141,7 @@ const StockFormModal = ({
     const savedIds = [];
     try {
       for (const item of items) {
-        await onAdd(item.product_uid, parseInt(item.quantity, 10), vehicleUid);
+        await onAdd(item.product_uid, parseInt(item.quantity, 10), vehicleUid, forDate);
         savedIds.push(item.id);
       }
       const vehicle = vehicles.find((v) => v.vehicle_uid === vehicleUid);
@@ -239,6 +247,22 @@ const StockFormModal = ({
               />
               <p style={{ fontSize: "0.75rem", color: "var(--color-text-subtle)", marginTop: "4px" }}>
                 Only active vehicles with a route are listed.
+              </p>
+            </div>
+
+            {/* Day the stock is loaded for */}
+            <div>
+              <label htmlFor="stock-for-date" style={labelStyle}>For day</label>
+              <input
+                id="stock-for-date"
+                type="date"
+                value={forDate}
+                min={todayISO()}
+                onChange={(e) => setForDate(e.target.value)}
+                style={{ padding: "8px 12px", border: "1px solid var(--border-subtle)", borderRadius: "8px", fontSize: "0.9rem", background: "var(--bg-card)", color: "var(--color-text)" }}
+              />
+              <p style={{ fontSize: "0.75rem", color: "var(--color-text-subtle)", marginTop: "4px" }}>
+                Leave empty for today — or tomorrow if today is already closed for this vehicle.
               </p>
             </div>
 

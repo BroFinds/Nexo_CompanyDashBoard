@@ -42,7 +42,7 @@ const DeliveryProgress = ({ totalQty, remainingQty, isComplete }) => {
   );
 };
 
-const VehicleCard = ({ vehicle, driverName, onClick, deliveryStatus, onCompleteDelivery }) => (
+const VehicleCard = ({ vehicle, driverName, onClick, deliveryStatus }) => (
   <Card hoverable padding="lg" onClick={onClick} style={{ cursor: 'pointer', height: '100%' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--spacing-md)' }}>
       <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
@@ -80,18 +80,6 @@ const VehicleCard = ({ vehicle, driverName, onClick, deliveryStatus, onCompleteD
 
     <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '10px', marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <p style={{ fontSize: '0.85rem' }}>Driver: <strong>{driverName}</strong></p>
-      {deliveryStatus?.hasActiveDelivery && !deliveryStatus.isComplete && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onCompleteDelivery?.(vehicle); }}
-          style={{
-            fontSize: '0.75rem', fontWeight: '700', padding: '5px 12px',
-            borderRadius: '6px', background: '#dc2626', color: '#fff',
-            border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
-          }}
-        >
-          Complete
-        </button>
-      )}
     </div>
   </Card>
 );

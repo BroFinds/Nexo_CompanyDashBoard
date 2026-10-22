@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import Card from "@shared/components/ui/Card";
 import Button from "@shared/components/ui/Button";
 import Skeleton from "@shared/components/ui/Skeleton";
-import { Truck, Calendar, Package, ChevronRight } from "lucide-react";
+import { Truck, Calendar, ChevronRight } from "lucide-react";
 import useInfiniteScroll from "@shared/hooks/useInfiniteScroll";
 import InfiniteScrollLoader from "@shared/components/ui/InfiniteScrollLoader";
 
@@ -63,7 +63,7 @@ const StockTable = ({
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid var(--border-subtle)", backgroundColor: "var(--bg-body)" }}>
-              {["Delivery", "Products Loaded", "Progress", "Status", ""].map((h) => (
+              {["Delivery", "Progress", "Status", ""].map((h) => (
                 <th key={h} style={{
                   position: "sticky", top: 0, zIndex: 10,
                   backgroundColor: "var(--bg-body)", padding: "14px 16px",
@@ -83,7 +83,7 @@ const StockTable = ({
                   <Skeleton width="160px" height="18px" style={{ marginBottom: "8px" }} />
                   <Skeleton width="110px" height="13px" />
                 </td>
-                {[1, 2, 3, 4].map((j) => (
+                {[1, 2, 3].map((j) => (
                   <td key={j} style={{ padding: "16px" }}><Skeleton width="90px" height="16px" /></td>
                 ))}
               </tr>
@@ -113,19 +113,6 @@ const StockTable = ({
                   </div>
                 </td>
 
-                {/* Products loaded — names listed */}
-                <td style={{ padding: "14px 16px" }}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-                    {delivery.entries.map((e) => (
-                      <div key={e.stock_uid} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.82rem" }}>
-                        <Package size={11} style={{ color: "var(--color-text-subtle)", flexShrink: 0 }} />
-                        <span style={{ color: "var(--color-text)", fontWeight: "500" }}>{e.product_name}</span>
-                        <span style={{ color: "var(--color-text-subtle)", fontFamily: "monospace" }}>×{e.quantity}</span>
-                      </div>
-                    ))}
-                  </div>
-                </td>
-
                 {/* Aggregated progress */}
                 <td style={{ padding: "14px 16px" }}>
                   <ProgressBar total={delivery.totalQty} delivered={delivery.deliveredQty} />
@@ -152,7 +139,7 @@ const StockTable = ({
             {/* Empty */}
             {stockLoaded && !isLoadingStock && deliveries.length === 0 && (
               <tr>
-                <td colSpan={5} style={{ textAlign: "center", padding: "48px", color: "var(--color-text-subtle)" }}>
+                <td colSpan={4} style={{ textAlign: "center", padding: "48px", color: "var(--color-text-subtle)" }}>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
                     <Truck size={28} style={{ opacity: 0.3 }} />
                     <p style={{ fontWeight: "600" }}>No deliveries found</p>
@@ -163,7 +150,7 @@ const StockTable = ({
             )}
 
             <tr>
-              <td colSpan={5} style={{ padding: 0, border: "none" }}>
+              <td colSpan={4} style={{ padding: 0, border: "none" }}>
                 <div ref={sentinelRef} style={{ height: "1px" }} />
                 {isLoadingStock && deliveries.length > 0 && <InfiniteScrollLoader style={{ padding: "12px" }} />}
               </td>

@@ -21,9 +21,7 @@ const formatTime = (raw) => {
   return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata" });
 };
 
-const StockDetailsModal = ({ delivery, logs, loading, error, onClose, products, onCompleteDelivery, onDeleteDelivery }) => {
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [isCompleting, setIsCompleting] = useState(false);
+const StockDetailsModal = ({ delivery, logs, loading, error, onClose, products, onDeleteDelivery }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -32,8 +30,6 @@ const StockDetailsModal = ({ delivery, logs, loading, error, onClose, products, 
     setShowDeleteConfirm(false);
     setIsDeleting(false);
     setDeleteError("");
-    setShowConfirm(false);
-    setIsCompleting(false);
   }, [delivery]);
 
   if (!delivery) return null;
@@ -278,55 +274,6 @@ const StockDetailsModal = ({ delivery, logs, loading, error, onClose, products, 
         )}
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-          {/* Complete Delivery — only shown when delivery is still in progress */}
-          {!delivery.is_delivery_complete && onCompleteDelivery && (
-            showConfirm ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "var(--radius-sm)", padding: "10px 14px" }}>
-                <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#c2410c" }}>
-                  Mark this delivery as complete?
-                </span>
-                <button
-                  onClick={async () => {
-                    setIsCompleting(true);
-                    try {
-                      await onCompleteDelivery(delivery.vehicle_uid);
-                    } finally {
-                      setIsCompleting(false);
-                      setShowConfirm(false);
-                    }
-                  }}
-                  disabled={isCompleting}
-                  style={{
-                    padding: "6px 14px", borderRadius: "var(--radius-sm)", fontSize: "0.82rem",
-                    fontWeight: "700", background: "#16a34a", color: "#fff",
-                    border: "none", cursor: isCompleting ? "not-allowed" : "pointer", opacity: isCompleting ? 0.6 : 1,
-                  }}
-                >
-                  {isCompleting ? "Completing…" : "Yes, Complete"}
-                </button>
-                <button
-                  onClick={() => setShowConfirm(false)}
-                  disabled={isCompleting}
-                  style={{ padding: "6px 12px", borderRadius: "var(--radius-sm)", fontSize: "0.82rem", fontWeight: "600", background: "transparent", color: "var(--color-text-subtle)", border: "1px solid var(--border-subtle)", cursor: "pointer" }}
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowConfirm(true)}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: "7px",
-                  padding: "9px 18px", borderRadius: "var(--radius-sm)", fontSize: "0.875rem",
-                  fontWeight: "700", background: "#16a34a", color: "#fff",
-                  border: "none", cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
-                }}
-              >
-                <CheckCircle size={15} /> Complete Delivery
-              </button>
-            )
-          )}
-
           {delivery.is_delivery_complete && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", color: "#16a34a", fontWeight: "600" }}>
               <CheckCircle size={14} /> Delivery already completed

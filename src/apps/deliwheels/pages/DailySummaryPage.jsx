@@ -7,16 +7,18 @@ import { AlertCircle, ChevronDown, ChevronRight, Truck, User, Route as RouteIcon
 import api, { getSession } from "@/services/api";
 import { useDeliwheels } from "../context/DeliwheelsContext";
 import { formatMoney, paymentStatusVariant } from "../utils/salesFormat";
+import DayCloseSection from "../components/DayCloseSection";
 
-// Daily Summary: pick a day and an active vehicle → its sales (with items), stock movement and
-// returns for that day. All numbers come from one backend call (getdeliwheels_vehicledailyreport).
+// Daily Summary: pick a day and an active vehicle → its money, sales (with items) and returns
+// (getdeliwheels_vehicledailyreport), and the day itself: stock, counting, collect & close, unloads
+// (DayCloseSection, the backend's vehicle-day endpoints).
 
 const todayISO = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
-// The DB sends UTC timestamps without a zone ("2026-10-21T17:15:55"); mark them UTC before display
+// Timestamps are UTC; older responses had no zone ("2026-10-21T17:15:55"), so mark those UTC before display
 const formatTime = (utc) => {
   if (!utc) return "";
   const d = new Date(/Z$|[+-]\d\d:\d\d$/.test(utc) ? utc : `${utc}Z`);
@@ -104,6 +106,7 @@ const DailySummaryPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [openSales, setOpenSales] = useState({}); // saleUid → expanded
+  const [refreshKey, setRefreshKey] = useState(0); // bumped after a close so sales show as paid
 
   useEffect(() => {
     if (!vehiclesLoaded) fetchVehicles();
@@ -155,34 +158,22 @@ const DailySummaryPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [selectedUid, date]);
+  }, [selectedUid, date, refreshKey]);
 
   const totals = report?.totals || {};
   const vehicle = report?.vehicle || {};
-  const stock = report?.stock || [];
   const sales = report?.sales || [];
   const returns = report?.returns || [];
-  const stockLimit = useRowLimit(stock);
   const salesLimit = useRowLimit(sales);
   const returnsLimit = useRowLimit(returns);
-  const { reset: resetStock } = stockLimit;
   const { reset: resetSales } = salesLimit;
   const { reset: resetReturns } = returnsLimit;
 
   // A new vehicle or day starts with the lists collapsed again
   useEffect(() => {
-    resetStock();
     resetSales();
     resetReturns();
-  }, [selectedUid, date, resetStock, resetSales, resetReturns]);
-  const stockTotals = stock.reduce(
-    (t, r) => ({
-      loaded: t.loaded + Number(r.loaded_value || 0),
-      sold: t.sold + Number(r.sold_value || 0),
-      closing: t.closing + Number(r.closing_value || 0),
-    }),
-    { loaded: 0, sold: 0, closing: 0 },
-  );
+  }, [selectedUid, date, resetSales, resetReturns]);
 
   return (
     <DeliwheelsLayout headerTitle="Daily Summary" headerSubtitle="One vehicle, one day">
@@ -190,7 +181,7 @@ const DailySummaryPage = () => {
         <div>
           <h2 style={{ fontSize: "var(--text-2xl)", fontWeight: "700", letterSpacing: "-0.02em" }}>Daily Summary</h2>
           <p style={{ color: "var(--color-text-subtle)" }}>
-            Sales, stock and returns of one vehicle for the day.
+            Sales, stock and returns of one vehicle for the day — count, collect and close it here.
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
@@ -279,50 +270,8 @@ const DailySummaryPage = () => {
                 <SummaryTile label="Returned" value={qty(totals.returned_qty)} hint={`₹${formatMoney(totals.return_value)}`} />
               </div>
 
-              {/* Stock */}
-              <h3 style={sectionTitle}>Stock (wholesale value){stock.length > 0 && ` · ${stock.length} products`}</h3>
-              <Card padding="none">
-                <div style={scrollBox(stockLimit)}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
-                    <thead>
-                      <tr style={{ borderBottom: "1px solid var(--border-subtle)", background: "var(--bg-body)" }}>
-                        {["Product", "Old remaining", "Loaded", "Sold", "Remaining", "Returned"].map((h) => (
-                          <th key={h} style={th}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {stock.length === 0 ? (
-                        <EmptyRow colSpan={6} text="No stock on this vehicle for the day." />
-                      ) : (
-                        stockLimit.visible.map((r) => (
-                          <tr key={r.product_uid} style={{ borderBottom: "1px solid var(--border-subtle)" }}>
-                            <td style={{ ...td, fontWeight: "600" }}>{r.product_name || "—"}</td>
-                            <td style={td}>{qty(r.old_remaining)}</td>
-                            <td style={td}>{qty(r.loaded_qty)} <span style={{ color: "var(--color-text-subtle)" }}>· ₹{formatMoney(r.loaded_value)}</span></td>
-                            <td style={td}>{qty(r.sold_qty)} <span style={{ color: "var(--color-text-subtle)" }}>· ₹{formatMoney(r.sold_value)}</span></td>
-                            <td style={td}>{qty(r.closing_remaining)} <span style={{ color: "var(--color-text-subtle)" }}>· ₹{formatMoney(r.closing_value)}</span></td>
-                            <td style={td}>{qty(r.returned_qty)}</td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                    {stock.length > 0 && (
-                      <tfoot>
-                        <tr style={{ fontWeight: "700" }}>
-                          <td style={td}>Total</td>
-                          <td style={td} />
-                          <td style={td}>₹{formatMoney(stockTotals.loaded)}</td>
-                          <td style={td}>₹{formatMoney(stockTotals.sold)}</td>
-                          <td style={td}>₹{formatMoney(stockTotals.closing)}</td>
-                          <td style={td} />
-                        </tr>
-                      </tfoot>
-                    )}
-                  </table>
-                </div>
-                <ShowMore limit={stockLimit} total={stock.length} />
-              </Card>
+              {/* Day: status, stock, count & close, unloads */}
+              <DayCloseSection vehicleUid={selectedUid} date={date} onClosed={() => setRefreshKey((k) => k + 1)} />
 
               {/* Sales with items */}
               <h3 style={sectionTitle}>Sales ({sales.length})</h3>
