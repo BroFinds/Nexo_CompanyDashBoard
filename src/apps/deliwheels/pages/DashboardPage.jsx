@@ -87,45 +87,43 @@ const DashboardPage = () => {
     [dashboard],
   );
 
-  // Merge leaderboard with ALL vehicles so every vehicle appears
+  // One row per vehicle: every active vehicle, plus inactive ones only if they had sales or
+  // returns in the period. Backend rows are matched on vehicle_uid; the vehicle number
+  // (ignoring case/spaces) is only a fallback for an older backend that doesn't send it.
   const leaderboard = useMemo(() => {
-    const map = new Map();
+    const normalize = (number) => String(number || "").replace(/\s+/g, "").toUpperCase();
+    const byUid = new Map();
+    const byNumber = new Map();
     leaderboardRaw.forEach((row) => {
-      map.set(row.vehicle_uid || row.vehicle_number, row);
+      if (row.vehicle_uid) byUid.set(row.vehicle_uid, row);
+      else if (row.vehicle_number) byNumber.set(normalize(row.vehicle_number), row);
     });
-    const merged = vehicles.map((v) => {
-      const existing = map.get(v.vehicle_uid) || map.get(v.registration) || {};
-      return {
-        vehicle_uid: v.vehicle_uid,
-        vehicle_number: v.registration || existing.vehicle_number || "—",
-        driver_name: v.driver || existing.driver_name || "Unassigned",
-        total_revenue: Number(existing.total_revenue || 0),
-        total_sales_count: Number(existing.total_sales_count || 0),
-        avg_sale: Number(existing.avg_sale || 0),
-        total_returns: Number(existing.total_returns || 0),
-        return_value: Number(existing.return_value || 0),
-        cash_amount: Number(existing.cash_amount || 0),
-        upi_amount: Number(existing.upi_amount || 0),
-        credit_amount: Number(existing.credit_amount || 0),
-      };
+
+    const toRow = (vehicle, row = {}) => ({
+      vehicle_uid: vehicle?.vehicle_uid || row.vehicle_uid,
+      vehicle_number: vehicle?.registration || row.vehicle_number || "—",
+      driver_name: vehicle?.driver || row.driver_name || "Unassigned",
+      total_revenue: Number(row.total_revenue || 0),
+      total_sales_count: Number(row.total_sales_count || 0),
+      avg_sale: Number(row.avg_sale || 0),
+      total_returns: Number(row.total_returns || 0),
+      return_value: Number(row.return_value || 0),
+      cash_amount: Number(row.cash_amount || 0),
+      upi_amount: Number(row.upi_amount || 0),
+      credit_amount: Number(row.credit_amount || 0),
     });
-    // Keep leaderboard entries not in vehicles list too
+
+    const used = new Set();
+    const merged = [];
+    vehicles.forEach((v) => {
+      const row = byUid.get(v.vehicle_uid) || byNumber.get(normalize(v.registration));
+      if (row) used.add(row);
+      if (!row && v.status === "inactive") return; // inactive with no activity → hide
+      merged.push(toRow(v, row));
+    });
+    // Activity for a vehicle that isn't in the vehicle list (e.g. deleted since)
     leaderboardRaw.forEach((row) => {
-      const key = row.vehicle_uid || row.vehicle_number;
-      const inList = vehicles.some((v) => v.vehicle_uid === row.vehicle_uid || v.registration === row.vehicle_number);
-      if (!inList) merged.push({
-        vehicle_uid: row.vehicle_uid,
-        vehicle_number: row.vehicle_number || "—",
-        driver_name: row.driver_name || "Unassigned",
-        total_revenue: Number(row.total_revenue || 0),
-        total_sales_count: Number(row.total_sales_count || 0),
-        avg_sale: Number(row.avg_sale || 0),
-        total_returns: Number(row.total_returns || 0),
-        return_value: Number(row.return_value || 0),
-        cash_amount: Number(row.cash_amount || 0),
-        upi_amount: Number(row.upi_amount || 0),
-        credit_amount: Number(row.credit_amount || 0),
-      });
+      if (!used.has(row)) merged.push(toRow(null, row));
     });
     return merged.sort((a, b) => b.total_revenue - a.total_revenue);
   }, [leaderboardRaw, vehicles]);

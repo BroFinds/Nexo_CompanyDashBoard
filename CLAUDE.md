@@ -94,7 +94,7 @@ npm run lint      # ESLint
 
 ### Environment variable (`.env.local`)
 ```
-VITE_API_BASE_URL=http://localhost:8080   # points at Nexo_backend
+VITE_API_BASE_URL=http://localhost:8090   # points at Nexo_backend
 ```
 
 ### Architecture
