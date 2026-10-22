@@ -90,6 +90,33 @@ export const useVehicles = () => {
     }
   }, [vehicles, vehiclesLoaded, vehiclesHasMore]);
 
+  // When we start from the cache, show it straight away but reload the full list once in the
+  // background, so vehicles added or changed elsewhere appear without logging out.
+  const startedFromCacheRef = useRef(!!readVehiclesCache());
+  const revalidatedRef = useRef(false);
+  useEffect(() => {
+    if (!startedFromCacheRef.current || revalidatedRef.current) return;
+    revalidatedRef.current = true;
+    (async () => {
+      try {
+        const session = getSession();
+        if (!session?.companyId) return;
+        const fresh = [];
+        for (let page = 0; ; page += 1) {
+          const { items, last } = await fetchPage(
+            `/api/v1/deliwheels/vehicles/company/${session.companyId}`,
+            { page },
+          );
+          fresh.push(...items.map(mapVehicle));
+          if (last || items.length === 0) break;
+        }
+        setVehicles(fresh);
+      } catch (e) {
+        console.error("revalidateVehicles:", e);
+      }
+    })();
+  }, []);
+
   const fetchVehicles = useCallback(async () => {
     if (vehiclesInFlightRef.current || !vehiclesHasMoreRef.current) return;
     vehiclesInFlightRef.current = true;

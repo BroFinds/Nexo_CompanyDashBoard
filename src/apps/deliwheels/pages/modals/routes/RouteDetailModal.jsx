@@ -147,7 +147,7 @@ const RouteDetailModal = ({ route, onClose, onEdit, onDisable }) => {
                   margin: 0,
                 }}
               >
-                Disable "{route.origin} to {route.destination}"? It will be
+                Disable &ldquo;{route.origin} to {route.destination}&rdquo;? It will be
                 moved to the Inactive list.
               </p>
               <div style={{ display: "flex", gap: "var(--spacing-sm)" }}>

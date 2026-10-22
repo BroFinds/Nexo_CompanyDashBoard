@@ -64,7 +64,7 @@ const EmployeeFormModal = ({
       }
     }
 
-    const phoneRegex = /^(\+91[\-\s]?)?[6789]\d{9}$/;
+    const phoneRegex = /^(\+91[-\s]?)?[6789]\d{9}$/;
     if (!phoneRegex.test(formData.contact_number)) {
       errors.contact_number = "Invalid Indian mobile number";
     }

@@ -214,7 +214,7 @@ const ProductDetailModal = ({ product, onClose, onEdit, onDisable }) => {
                   margin: 0,
                 }}
               >
-                Disable "{product.product_name}"? It will be moved to the
+                Disable &ldquo;{product.product_name}&rdquo;? It will be moved to the
                 Inactive list.
               </p>
               <div style={{ display: "flex", gap: "var(--spacing-sm)" }}>

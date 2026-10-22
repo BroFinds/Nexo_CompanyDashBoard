@@ -94,6 +94,33 @@ export const useProducts = () => {
     }
   }, [products, productsLoaded, productsHasMore]);
 
+  // When we start from the cache, show it straight away but reload the full list once in the
+  // background, so products added or changed elsewhere appear without logging out.
+  const startedFromCacheRef = useRef(!!readProductsCache());
+  const revalidatedRef = useRef(false);
+  useEffect(() => {
+    if (!startedFromCacheRef.current || revalidatedRef.current) return;
+    revalidatedRef.current = true;
+    (async () => {
+      try {
+        const session = getSession();
+        if (!session?.companyId) return;
+        const fresh = [];
+        for (let page = 0; ; page += 1) {
+          const { items, last } = await fetchPage(
+            `/api/v1/companies/${session.companyId}/products`,
+            { page },
+          );
+          fresh.push(...items.map(mapProduct));
+          if (last || items.length === 0) break;
+        }
+        setProducts(fresh);
+      } catch (e) {
+        console.error("revalidateProducts:", e);
+      }
+    })();
+  }, []);
+
   const fetchProducts = useCallback(async () => {
     if (productsInFlightRef.current || !productsHasMoreRef.current) return;
     productsInFlightRef.current = true;

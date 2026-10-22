@@ -5,6 +5,7 @@ import NexoApp from "./apps/nexo/NexoApp";
 import DeliwheelsApp from "./apps/deliwheels/DeliwheelsApp";
 import LoginPage from "./apps/nexo/pages/LoginPage";
 import AuthGuard from "./shared/components/auth/AuthGuard";
+import RequireApp from "./shared/components/auth/RequireApp";
 import { GlobalProvider } from "./apps/nexo/context/GlobalContext";
 import { DeliwheelsProvider } from "./apps/deliwheels/context/DeliwheelsContext";
 import WorkspaceInitGate from "./shared/components/init/WorkspaceInitGate";
@@ -15,15 +16,22 @@ import { EnabledAppsProvider } from "./shared/context/EnabledAppsContext";
 // nexo/deliwheels route split, so products + vehicles are fetched once in
 // parallel. Switching to /deliwheels reuses the already-hydrated state and
 // skips any second initialization splash.
-const AuthenticatedShell = ({ children }) => (
-  <AuthGuard>
+// `appId` (optional) also requires that app to be enabled for the company; it is checked before
+// the providers mount, so a locked app never starts loading data.
+const AuthenticatedShell = ({ appId, children }) => {
+  const shell = (
     <GlobalProvider>
       <DeliwheelsProvider>
         <WorkspaceInitGate>{children}</WorkspaceInitGate>
       </DeliwheelsProvider>
     </GlobalProvider>
-  </AuthGuard>
-);
+  );
+  return (
+    <AuthGuard>
+      {appId ? <RequireApp appId={appId}>{shell}</RequireApp> : shell}
+    </AuthGuard>
+  );
+};
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -44,7 +52,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route
           path="/deliwheels/*"
           element={
-            <AuthenticatedShell>
+            <AuthenticatedShell appId="deliwheels">
               <DeliwheelsApp />
             </AuthenticatedShell>
           }

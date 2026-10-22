@@ -128,9 +128,13 @@ const StockFormModal = ({
     }
 
     setIsSubmitting(true);
+    // Products are saved one by one. Track what went through so that, if one fails, the saved ones
+    // leave the list and pressing Load again doesn't save them a second time.
+    const savedIds = [];
     try {
       for (const item of items) {
         await onAdd(item.product_uid, parseInt(item.quantity, 10), vehicleUid);
+        savedIds.push(item.id);
       }
       const vehicle = vehicles.find((v) => v.vehicle_uid === vehicleUid);
       setSuccessMsg(
@@ -138,7 +142,16 @@ const StockFormModal = ({
       );
       setFormError("");
     } catch (e) {
-      setFormError(e.response?.data?.message || "Failed to save stock. Check console.");
+      const reason = e.response?.data?.message || "Failed to save stock.";
+      if (savedIds.length > 0) {
+        const remaining = items.length - savedIds.length;
+        setItems((prev) => prev.filter((i) => !savedIds.includes(i.id)));
+        setFormError(
+          `${savedIds.length} of ${items.length} products were loaded. ${remaining} left in the list could not be saved (${reason}). Press Load again to retry them.`
+        );
+      } else {
+        setFormError(reason);
+      }
     } finally {
       setIsSubmitting(false);
     }
