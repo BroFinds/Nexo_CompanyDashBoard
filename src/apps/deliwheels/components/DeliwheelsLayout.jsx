@@ -11,6 +11,8 @@ import {
   CreditCard,
   RotateCcw,
   HandCoins,
+  CalendarCheck,
+  Settings2,
 } from "lucide-react";
 import { logout } from "@/services/api";
 
@@ -22,16 +24,14 @@ const dwNavItems = [
     path: "/deliwheels",
     exact: true,
   },
+  {
+    id: "daily-summary",
+    label: "Daily Summary",
+    icon: CalendarCheck,
+    path: "/deliwheels/daily-summary",
+  },
   { id: "stock", label: "Stock", icon: Warehouse, path: "/deliwheels/stock" },
   { id: "sales", label: "Sales", icon: Wallet, path: "/deliwheels/sales" },
-  {
-    id: "vehicles",
-    label: "Vehicles",
-    icon: Truck,
-    path: "/deliwheels/vehicles",
-  },
-  { id: "routes", label: "Routes", icon: Route, path: "/deliwheels/routes" },
-  { id: "shops", label: "Shops", icon: Store, path: "/deliwheels/shops" },
   {
     id: "reports",
     label: "Reports",
@@ -46,6 +46,17 @@ const dwNavItems = [
   },
   { id: "credits", label: "Credits", icon: CreditCard, path: "/deliwheels/credits" },
   { id: "returns", label: "Returns", icon: RotateCcw, path: "/deliwheels/returns" },
+  // Set up once, rarely changed — grouped so the daily items stay at the top
+  {
+    id: "setup",
+    label: "Setup",
+    icon: Settings2,
+    children: [
+      { id: "vehicles", label: "Vehicles", icon: Truck, path: "/deliwheels/vehicles" },
+      { id: "routes", label: "Routes", icon: Route, path: "/deliwheels/routes" },
+      { id: "shops", label: "Shops", icon: Store, path: "/deliwheels/shops" },
+    ],
+  },
 ];
 
 const dwBrand = { name: "DeliWheels", letter: "D" };

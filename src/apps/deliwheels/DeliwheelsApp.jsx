@@ -10,12 +10,14 @@ import ReportsPage from './pages/ReportsPage';
 import CreditPage from './pages/CreditPage';
 import ReturnsPage from './pages/ReturnsPage';
 import CollectCashPage from './pages/CollectCashPage';
+import DailySummaryPage from './pages/DailySummaryPage';
 
 const DeliwheelsApp = () => {
   return (
     <div data-app="deliwheels" style={{ minHeight: '100vh' }}>
       <Routes>
         <Route path="/" element={<DashboardPage />} />
+        <Route path="/daily-summary" element={<DailySummaryPage />} />
         <Route path="/vehicles" element={<VehiclesPage />} />
         <Route path="/routes" element={<RoutesPage />} />
         <Route path="/shops" element={<ShopsPage />} />

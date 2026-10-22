@@ -1,13 +1,102 @@
-import React from 'react';
-import { User, Settings, LogOut, ArrowLeft } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { User, Settings, LogOut, ArrowLeft, ChevronDown, ChevronRight } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getSession, logout } from '@/services/api';
+
+const isItemActive = (item, pathname) =>
+  item.exact
+    ? pathname === item.path
+    : pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path + '/'));
+
+const NavItem = ({ item, active, onNavigate, nested = false }) => {
+  const Icon = item.icon;
+  return (
+    <li style={{ marginBottom: '4px' }}>
+      <button
+        onClick={() => onNavigate(item.path)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          padding: nested ? '8px 12px 8px 22px' : '10px 12px',
+          borderRadius: '8px',
+          backgroundColor: active ? 'var(--color-primary-subtle)' : 'transparent',
+          color: active ? 'var(--color-primary)' : 'var(--color-text-subtle)',
+          fontSize: '0.9rem',
+          fontWeight: active ? '600' : '500',
+          transition: 'all var(--anim-fast)',
+          width: '100%',
+          border: 'none',
+          cursor: 'pointer',
+          textAlign: 'left'
+        }}>
+        <Icon size={18} style={{ marginRight: '12px', color: active ? 'var(--color-primary)' : 'currentColor', opacity: active ? 1 : 0.7 }} />
+        {item.label}
+      </button>
+    </li>
+  );
+};
+
+// An item with `children` is a collapsible group; it starts open when one of its pages is active
+const NavGroup = ({ item, pathname, onNavigate }) => {
+  const childActive = item.children.some((child) => isItemActive(child, pathname));
+  const [open, setOpen] = useState(childActive);
+  const Icon = item.icon;
+  const Chevron = open ? ChevronDown : ChevronRight;
+
+  useEffect(() => {
+    if (childActive) setOpen(true);
+  }, [childActive]);
+
+  return (
+    <li style={{ marginBottom: '4px' }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          padding: '10px 12px',
+          borderRadius: '8px',
+          backgroundColor: 'transparent',
+          color: childActive ? 'var(--color-primary)' : 'var(--color-text-subtle)',
+          fontSize: '0.9rem',
+          fontWeight: childActive ? '600' : '500',
+          width: '100%',
+          border: 'none',
+          cursor: 'pointer',
+          textAlign: 'left'
+        }}>
+        <Icon size={18} style={{ marginRight: '12px', opacity: childActive ? 1 : 0.7 }} />
+        <span style={{ flex: 1 }}>{item.label}</span>
+        <Chevron size={16} style={{ opacity: 0.7 }} />
+      </button>
+      {open && (
+        <ul style={{ listStyle: 'none', marginTop: '4px' }}>
+          {item.children.map((child) => (
+            <NavItem
+              key={child.id}
+              item={child}
+              active={isItemActive(child, pathname)}
+              onNavigate={onNavigate}
+              nested
+            />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+};
 
 const Sidebar = ({ isOpen, onClose, navItems = [], brand = { name: 'Nexo', letter: 'N' }, backLink }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const session = getSession();
   const displayName = session?.userName || session?.username || 'User';
+
+  const go = (path) => {
+    navigate(path);
+    if (window.innerWidth < 768) onClose();
+  };
 
   return (
     <aside className={`sidebar-container ${isOpen ? 'open' : ''}`}>
@@ -52,41 +141,23 @@ const Sidebar = ({ isOpen, onClose, navItems = [], brand = { name: 'Nexo', lette
              paddingLeft: '10px'
           }}>Menu</p>
           <ul style={{ listStyle: 'none' }}>
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.exact 
-                ? location.pathname === item.path
-                : (location.pathname === item.path || 
-                   (item.path !== '/' && location.pathname.startsWith(item.path + '/')));
-              
-              return (
-                <li key={item.id} style={{ marginBottom: '4px' }}>
-                  <button 
-                    onClick={() => {
-                      navigate(item.path);
-                      if (window.innerWidth < 768) onClose();
-                    }}
-                    style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    backgroundColor: isActive ? 'var(--color-primary-subtle)' : 'transparent',
-                    color: isActive ? 'var(--color-primary)' : 'var(--color-text-subtle)',
-                    fontSize: '0.9rem',
-                    fontWeight: isActive ? '600' : '500',
-                    transition: 'all var(--anim-fast)',
-                    width: '100%',
-                    border: 'none',
-                    cursor: 'pointer',
-                    textAlign: 'left'
-                  }}>
-                    <Icon size={18} style={{ marginRight: '12px', color: isActive ? 'var(--color-primary)' : 'currentColor', opacity: isActive ? 1 : 0.7 }} />
-                    {item.label}
-                  </button>
-                </li>
-              );
-            })}
+            {navItems.map((item) =>
+              item.children ? (
+                <NavGroup
+                  key={item.id}
+                  item={item}
+                  pathname={location.pathname}
+                  onNavigate={go}
+                />
+              ) : (
+                <NavItem
+                  key={item.id}
+                  item={item}
+                  active={isItemActive(item, location.pathname)}
+                  onNavigate={go}
+                />
+              ),
+            )}
           </ul>
         </nav>
 
