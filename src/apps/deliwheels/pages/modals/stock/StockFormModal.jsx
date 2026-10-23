@@ -44,8 +44,8 @@ const StockFormModal = ({
 
   // ── Add mode state ────────────────────────────────────────────────────────
   const [vehicleUid, setVehicleUid] = useState("");
-  // The day the load is for; empty lets the server choose (today, or tomorrow once today is closed)
-  const [forDate, setForDate] = useState("");
+  // The day the load is for; today unless the admin picks another
+  const [forDate, setForDate] = useState(todayISO());
   // list of { id, product_uid, quantity }
   const [items, setItems] = useState([]);
   // current picker row
@@ -64,7 +64,7 @@ const StockFormModal = ({
     } else {
       setEditForm(EMPTY_EDIT_FORM);
       setVehicleUid("");
-      setForDate("");
+      setForDate(todayISO());
       setItems([]);
       setPickerProduct("");
       setPickerQty(1);
@@ -262,7 +262,7 @@ const StockFormModal = ({
                 style={{ padding: "8px 12px", border: "1px solid var(--border-subtle)", borderRadius: "8px", fontSize: "0.9rem", background: "var(--bg-card)", color: "var(--color-text)" }}
               />
               <p style={{ fontSize: "0.75rem", color: "var(--color-text-subtle)", marginTop: "4px" }}>
-                Leave empty for today — or tomorrow if today is already closed for this vehicle.
+                Today by default. If today is already closed for this vehicle, pick tomorrow.
               </p>
             </div>
 

@@ -136,6 +136,11 @@ const ProductFormModal = ({
       setSaveError("Please select a measurement unit from the list.");
       return;
     }
+    // Both prices are required; Deliwheels charges and values stock at the wholesale price
+    if (!(parseFloat(formData.general_price) > 0) || !(parseFloat(formData.wholesale_price) > 0)) {
+      setSaveError("Enter both the general price and the wholesale price (more than 0).");
+      return;
+    }
     setIsSaving(true);
     setSaveError("");
     try {
@@ -331,7 +336,8 @@ const ProductFormModal = ({
             label="General Price"
             type="number"
             step="0.01"
-            min="0"
+            min="0.01"
+            required
             value={formData.general_price}
             onChange={(e) =>
               setFormData({ ...formData, general_price: e.target.value })
@@ -342,7 +348,8 @@ const ProductFormModal = ({
             label="Wholesale Price"
             type="number"
             step="0.01"
-            min="0"
+            min="0.01"
+            required
             value={formData.wholesale_price}
             onChange={(e) =>
               setFormData({ ...formData, wholesale_price: e.target.value })

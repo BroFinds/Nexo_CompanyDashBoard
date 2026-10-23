@@ -44,9 +44,8 @@ const StockDetailsModal = ({ delivery, logs, loading, error, onClose, products, 
     const product = (products || []).find(
       (p) => (p.product_uid || p.productUid) === entry.product_uid
     );
-    const unitPrice = parseFloat(
-      product?.general_price || product?.generalPrice || product?.price || 0
-    );
+    // Stock is valued at the wholesale price (the general price is display only)
+    const unitPrice = parseFloat(product?.wholesale_price || product?.wholesalePrice || 0);
     const rem = entry.remaining_quantity ?? entry.quantity;
     const delivered = Math.max(0, entry.quantity - rem);
     return { ...entry, unitPrice, totalCost: unitPrice * entry.quantity, deliveredCost: unitPrice * delivered, delivered, remaining: rem };
