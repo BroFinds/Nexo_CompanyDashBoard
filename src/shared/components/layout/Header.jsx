@@ -2,7 +2,9 @@ import React from "react";
 import { Search, Bell, Menu, LogOut } from "lucide-react";
 import { getSession } from "@/services/api";
 
-const Header = ({ onToggleSidebar, title, subtitle = "", onLogout }) => {
+// notification: { count, onClick, title } — the bell shows a badge when count > 0
+const Header = ({ onToggleSidebar, title, subtitle = "", onLogout, notification }) => {
+  const notificationCount = notification?.count || 0;
   const session = getSession();
   const displayName = session?.userName || session?.username || "User";
   return (
@@ -137,7 +139,12 @@ const Header = ({ onToggleSidebar, title, subtitle = "", onLogout }) => {
         `}</style>
 
         <button
+          type="button"
+          onClick={notification?.onClick}
+          title={notification?.title}
+          aria-label={notificationCount > 0 ? `${notificationCount} ${notification?.title || "notifications"}` : "Notifications"}
           style={{
+            position: "relative",
             width: "40px",
             height: "40px",
             borderRadius: "50%",
@@ -147,12 +154,35 @@ const Header = ({ onToggleSidebar, title, subtitle = "", onLogout }) => {
             alignItems: "center",
             justifyContent: "center",
             cursor: "pointer",
-            color: "var(--color-text-subtle)",
+            color: notificationCount > 0 ? "var(--color-text-main)" : "var(--color-text-subtle)",
             boxShadow: "var(--shadow-sm)",
             transition: "all 0.2s",
           }}
         >
           <Bell size={20} />
+          {notificationCount > 0 && (
+            <span
+              style={{
+                position: "absolute",
+                top: "-4px",
+                right: "-4px",
+                minWidth: "18px",
+                height: "18px",
+                padding: "0 5px",
+                borderRadius: "999px",
+                background: "#ef4444",
+                color: "#fff",
+                fontSize: "0.68rem",
+                fontWeight: 700,
+                lineHeight: "18px",
+                textAlign: "center",
+                border: "2px solid var(--bg-surface)",
+                boxSizing: "content-box",
+              }}
+            >
+              {notificationCount > 99 ? "99+" : notificationCount}
+            </span>
+          )}
         </button>
 
         <button

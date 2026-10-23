@@ -35,7 +35,7 @@ const EmployeeSection = ({
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-          gap: "var(--spacing-lg)",
+          gap: "var(--spacing-md)",
         }}
       >
         {employees.map((employee, index) => (

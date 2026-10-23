@@ -16,6 +16,9 @@ const EMPTY_VEHICLE = {
   password: "",
 };
 
+// vehicles.vehicle_name is varchar(20) in the database.
+const MODEL_MAX_LENGTH = 20;
+
 const fieldStyle = {
   width: "100%",
   padding: "10px 12px",
@@ -116,8 +119,16 @@ const VehicleFormModal = ({
       setFormError("Registration and model are required.");
       return;
     }
-    if (!isEditMode && (!formData.username || !formData.password)) {
-      setFormError("Vehicle username and password are required.");
+    if (formData.model.trim().length > MODEL_MAX_LENGTH) {
+      setFormError(`Model must be at most ${MODEL_MAX_LENGTH} characters.`);
+      return;
+    }
+    if (!formData.username) {
+      setFormError("Vehicle username is required.");
+      return;
+    }
+    if (!isEditMode && !formData.password) {
+      setFormError("Vehicle password is required.");
       return;
     }
     if (formData.username && formData.username.length < 6) {
@@ -179,8 +190,18 @@ const VehicleFormModal = ({
               value={formData.model}
               onChange={handleFormChange}
               placeholder="e.g. Tata Ace"
+              maxLength={MODEL_MAX_LENGTH}
               style={fieldStyle}
             />
+            <p
+              style={{
+                fontSize: "0.75rem",
+                color: "var(--color-text-subtle)",
+                marginTop: "4px",
+              }}
+            >
+              {(formData.model || "").length}/{MODEL_MAX_LENGTH} characters
+            </p>
           </div>
         </div>
         <div
@@ -192,7 +213,7 @@ const VehicleFormModal = ({
         >
           <div>
             <label style={labelStyle}>
-              Vehicle Username {!isEditMode && "*"}
+              Vehicle Username *
             </label>
             <input
               name="username"

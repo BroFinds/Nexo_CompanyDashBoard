@@ -37,7 +37,7 @@ const ProductSection = ({
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-          gap: "var(--spacing-lg)",
+          gap: "var(--spacing-md)",
         }}
       >
         {products.map((product, index) => {

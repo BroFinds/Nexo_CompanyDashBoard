@@ -1,5 +1,5 @@
 import React from 'react';
-import Card from '@shared/components/ui/Card';
+import EntityCard, { EntityIcon } from '@shared/components/ui/EntityCard';
 import Badge from '@shared/components/ui/Badge';
 import { Truck } from 'lucide-react';
 
@@ -42,32 +42,31 @@ const DeliveryProgress = ({ totalQty, remainingQty }) => {
   );
 };
 
-const VehicleCard = ({ vehicle, driverName, onClick, deliveryStatus }) => (
-  <Card hoverable padding="lg" onClick={onClick} style={{ cursor: 'pointer', height: '100%' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--spacing-md)' }}>
-      <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
-        <Truck size={24} />
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
-        <Badge variant={getStatusVariant(vehicle.status)}>{vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1)}</Badge>
-      </div>
-    </div>
-
-    <h3 style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '1rem', marginBottom: '4px' }}>{vehicle.registration || '—'}</h3>
-    <p style={{ color: 'var(--color-text-subtle)', fontSize: '0.85rem', marginBottom: 'var(--spacing-sm)' }}>{vehicle.model || 'Unnamed'}</p>
-
-    {/* Delivery progress bar — only when active delivery exists */}
+const VehicleCard = ({ vehicle, driverName, routeLabel, onClick, deliveryStatus }) => (
+  <EntityCard
+    onClick={onClick}
+    muted={vehicle.status !== 'active'}
+    leading={
+      <EntityIcon background="var(--color-primary-subtle)" color="var(--color-primary)">
+        <Truck size={20} />
+      </EntityIcon>
+    }
+    title={vehicle.registration || '—'}
+    titleMono
+    subtitle={vehicle.model || 'Unnamed'}
+    badge={<Badge variant={getStatusVariant(vehicle.status)}>{vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1)}</Badge>}
+    meta={[
+      { label: 'Driver', value: driverName },
+      { label: 'Route', value: routeLabel || 'Not assigned' },
+    ]}
+  >
     {deliveryStatus?.hasActiveDelivery && (
       <DeliveryProgress
         totalQty={deliveryStatus.totalQty}
         remainingQty={deliveryStatus.remainingQty}
       />
     )}
-
-    <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '10px', marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <p style={{ fontSize: '0.85rem' }}>Driver: <strong>{driverName}</strong></p>
-    </div>
-  </Card>
+  </EntityCard>
 );
 
 export default VehicleCard;

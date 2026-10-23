@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
-const DashboardLayout = ({ children, navItems, brand, headerTitle, headerSubtitle, backLink, onLogout }) => {
+const DashboardLayout = ({ children, navItems, brand, headerTitle, headerSubtitle, backLink, onLogout, notification }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => {
@@ -35,6 +35,7 @@ const DashboardLayout = ({ children, navItems, brand, headerTitle, headerSubtitl
           title={headerTitle}
           subtitle={headerSubtitle}
           onLogout={onLogout}
+          notification={notification}
         />
         <main style={{ 
           flex: 1, 

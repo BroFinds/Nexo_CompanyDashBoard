@@ -90,6 +90,13 @@ const VehiclesPage = () => {
     return "Unassigned";
   };
 
+  const getRouteLabel = (v) => {
+    const route = (routes || []).find((r) => r.route_uid === v.route_uid);
+    const origin = route?.origin || v.route_origin;
+    const destination = route?.destination || v.route_destination;
+    return origin && destination ? `${origin} → ${destination}` : "";
+  };
+
   const term = searchTerm.toLowerCase();
   const matchesSearch = (v) =>
     (v.registration || "").toLowerCase().includes(term) ||
@@ -216,6 +223,7 @@ const VehiclesPage = () => {
             emptyMessage="No active vehicles found."
             onCardClick={setSelectedVehicle}
             getDriverName={getDriverName}
+            getRouteLabel={getRouteLabel}
             deliveryStatusMap={deliveryStatusMap}
             style={{ marginBottom: "var(--spacing-xl)" }}
           />
@@ -226,6 +234,7 @@ const VehiclesPage = () => {
             emptyMessage="No inactive vehicles."
             onCardClick={setSelectedVehicle}
             getDriverName={getDriverName}
+            getRouteLabel={getRouteLabel}
           />
 
           <div ref={sentinelRef} style={{ height: "1px" }} />

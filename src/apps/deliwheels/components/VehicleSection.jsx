@@ -7,6 +7,7 @@ const VehicleSection = ({
   emptyMessage,
   onCardClick,
   getDriverName,
+  getRouteLabel,
   deliveryStatusMap,
   style,
 }) => {
@@ -35,8 +36,8 @@ const VehicleSection = ({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          gap: "var(--spacing-lg)",
+          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          gap: "var(--spacing-md)",
         }}
       >
         {vehicles.map((v, i) => (
@@ -47,6 +48,7 @@ const VehicleSection = ({
             <VehicleCard
               vehicle={v}
               driverName={getDriverName(v)}
+              routeLabel={getRouteLabel?.(v)}
               onClick={() => onCardClick(v)}
               deliveryStatus={deliveryStatusMap?.[v.vehicle_uid]}
             />

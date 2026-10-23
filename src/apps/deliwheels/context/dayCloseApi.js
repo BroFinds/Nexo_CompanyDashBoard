@@ -1,4 +1,4 @@
-import api, { getSession } from "@/services/api";
+import api, { getSession, fetchPage } from "@/services/api";
 
 // Vehicle day (Close Day), unloads, reasons and approvals — the backend's day-close endpoints.
 
@@ -49,14 +49,42 @@ export const fetchUnloads = async (vehicleUid, date) => {
   return data || [];
 };
 
+// Every unload of the company in a business-day range, all pages.
+// filters: { vehicleUid, fromDate, toDate } (YYYY-MM-DD; the backend defaults to today)
+export const fetchCompanyUnloads = async (filters = {}) => {
+  const params = {};
+  if (filters.vehicleUid) params.vehicleUid = filters.vehicleUid;
+  if (filters.fromDate) params.fromDate = filters.fromDate;
+  if (filters.toDate) params.toDate = filters.toDate;
+  const all = [];
+  let page = 0;
+  let last = false;
+  while (!last) {
+    const result = await fetchPage(`/api/v1/deliwheels/unloads/company/${companyId()}`, { page, params });
+    all.push(...result.items);
+    last = result.last;
+    page++;
+  }
+  return all;
+};
+
 export const fetchApprovals = async () => {
   const { data } = await api.get(`/api/v1/deliwheels/approvals/company/${companyId()}`);
   return data || { sales: [], returns: [], unloads: [] };
 };
 
+// Fired after an approval is accepted so the header bell refreshes its count
+export const APPROVALS_CHANGED = "deliwheels:approvals-changed";
+
 // kind: SALE / RETURN / UNLOAD
 export const acceptApproval = async (kind, uid) => {
   await api.post(`/api/v1/deliwheels/approvals/${kind}/${uid}/accept`);
+  window.dispatchEvent(new Event(APPROVALS_CHANGED));
+};
+
+export const fetchApprovalCount = async () => {
+  const { sales = [], returns = [], unloads = [] } = await fetchApprovals();
+  return sales.length + returns.length + unloads.length;
 };
 
 export const errorMessage = (e, fallback) => e?.response?.data?.message || fallback;

@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import DeliwheelsLayout from "../components/DeliwheelsLayout";
 import Card from "@shared/components/ui/Card";
 import Skeleton from "@shared/components/ui/Skeleton";
@@ -7,13 +6,9 @@ import {
   Truck,
   Route,
   PackageCheck,
-  TrendingUp,
   Package,
-  Receipt,
   Wallet,
   Plus,
-  FileBarChart,
-  Warehouse,
   Banknote,
   Smartphone,
   Trophy,
@@ -52,7 +47,6 @@ const TIME_RANGES = [
 ];
 
 const DashboardPage = () => {
-  const navigate = useNavigate();
   const {
     vehicles,
     fetchVehicles,
@@ -182,49 +176,6 @@ const DashboardPage = () => {
     },
   ];
 
-  const quickActions = [
-    {
-      label: "Load Stock",
-      desc: "Add a new loading",
-      icon: Plus,
-      color: "#7c3aed",
-      bg: "linear-gradient(135deg, #ede9fe, #ddd6fe)",
-      onClick: () => setIsStockFormOpen(true),
-    },
-    {
-      label: "View Sales",
-      desc: "Today's invoices",
-      icon: Receipt,
-      color: "#059669",
-      bg: "linear-gradient(135deg, #d1fae5, #a7f3d0)",
-      onClick: () => navigate("/deliwheels/sales"),
-    },
-    {
-      label: "Vehicles",
-      desc: "Fleet status",
-      icon: Truck,
-      color: "var(--color-primary)",
-      bg: "var(--color-primary-subtle)",
-      onClick: () => navigate("/deliwheels/vehicles"),
-    },
-    {
-      label: "Stock List",
-      desc: "All loadings",
-      icon: Warehouse,
-      color: "#0891b2",
-      bg: "linear-gradient(135deg, #cffafe, #a5f3fc)",
-      onClick: () => navigate("/deliwheels/stock"),
-    },
-    {
-      label: "Reports",
-      desc: "Performance",
-      icon: FileBarChart,
-      color: "#ea580c",
-      bg: "linear-gradient(135deg, #ffedd5, #fed7aa)",
-      onClick: () => navigate("/deliwheels/reports"),
-    },
-  ];
-
   return (
     <DeliwheelsLayout
       headerTitle="Dashboard"
@@ -265,28 +216,18 @@ const DashboardPage = () => {
                 key={i}
                 className={`animate-in ${i > 1 ? `delay-${(i - 1) * 100}` : ""}`}
               >
-                <Card padding="lg" style={{ height: "100%" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "var(--spacing-md)",
-                    }}
-                  >
-                    <Skeleton width="48px" height="48px" borderRadius="12px" />
-                    <Skeleton width="16px" height="16px" borderRadius="4px" />
+                <Card padding="md" style={{ height: "100%" }}>
+                  <div className="stat-card-body">
+                    <Skeleton width="44px" height="44px" borderRadius="12px" />
+                    <div style={{ flex: 1 }}>
+                      <Skeleton
+                        width="60px"
+                        height="24px"
+                        style={{ marginBottom: "6px" }}
+                      />
+                      <Skeleton width="100px" height="12px" />
+                    </div>
                   </div>
-                  <Skeleton
-                    width="60px"
-                    height="32px"
-                    style={{ marginBottom: "6px" }}
-                  />
-                  <Skeleton
-                    width="100px"
-                    height="14px"
-                    style={{ marginBottom: "4px" }}
-                  />
-                  <Skeleton width="70px" height="12px" />
                 </Card>
               </div>
             ))
@@ -295,96 +236,26 @@ const DashboardPage = () => {
               const delayClass = index === 0 ? "" : `delay-${index * 100}`;
               return (
                 <div key={stat.label} className={`animate-in ${delayClass}`}>
-                  <Card hoverable padding="lg" style={{ height: "100%" }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "start",
-                        marginBottom: "var(--spacing-md)",
-                      }}
-                    >
+                  <Card hoverable padding="md" style={{ height: "100%" }}>
+                    <div className="stat-card-body">
                       <div
-                        style={{
-                          width: "48px",
-                          height: "48px",
-                          borderRadius: "12px",
-                          background: stat.bg,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: stat.color,
-                        }}
+                        className="stat-card-icon"
+                        style={{ background: stat.bg, color: stat.color }}
                       >
-                        <Icon size={24} />
+                        <Icon size={22} />
                       </div>
-                      <TrendingUp
-                        size={16}
-                        style={{ color: "#10b981", marginTop: "4px" }}
-                      />
+                      <div style={{ minWidth: 0 }}>
+                        <div className="stat-card-value">
+                          <span>{stat.value}</span>
+                          <span className="stat-card-label">{stat.label}</span>
+                        </div>
+                        <p className="stat-card-sub">{stat.sub}</p>
+                      </div>
                     </div>
-                    <p
-                      style={{
-                        fontSize: "2rem",
-                        fontWeight: "800",
-                        letterSpacing: "-0.02em",
-                        lineHeight: 1,
-                        marginBottom: "4px",
-                      }}
-                    >
-                      {stat.value}
-                    </p>
-                    <p
-                      style={{
-                        fontSize: "0.9rem",
-                        fontWeight: "600",
-                        color: "var(--color-text-main)",
-                        marginBottom: "2px",
-                      }}
-                    >
-                      {stat.label}
-                    </p>
-                    <p
-                      style={{
-                        fontSize: "0.8rem",
-                        color: "var(--color-text-subtle)",
-                      }}
-                    >
-                      {stat.sub}
-                    </p>
                   </Card>
                 </div>
               );
             })}
-      </div>
-
-      {/* Quick Actions row */}
-      <div
-        className="animate-in delay-100 quick-actions-row"
-        style={{ marginBottom: "var(--spacing-lg)" }}
-      >
-        {quickActions.map((qa) => {
-          const Icon = qa.icon;
-          return (
-            <button
-              key={qa.label}
-              onClick={qa.onClick}
-              className="quick-action-btn"
-              type="button"
-            >
-              <div
-                className="quick-action-icon"
-                style={{ background: qa.bg, color: qa.color }}
-              >
-                <Icon size={20} />
-              </div>
-              <div className="quick-action-text">
-                <div className="quick-action-label">{qa.label}</div>
-                <div className="quick-action-desc">{qa.desc}</div>
-              </div>
-            </button>
-          );
-        })}
       </div>
 
       {/* Vehicle Leaderboard — Today (full width) */}
@@ -519,54 +390,81 @@ const DashboardPage = () => {
         onUpdate={updateStock}
       />
 
+      {!isStockFormOpen && (
+        <button
+          type="button"
+          className="load-stock-fab"
+          onClick={() => setIsStockFormOpen(true)}
+          aria-label="Load Stock"
+          title="Load Stock"
+        >
+          <Plus size={20} />
+          <span>Load Stock</span>
+        </button>
+      )}
+
       <style>{`
-        .quick-actions-row {
-          display: grid;
-          grid-template-columns: repeat(5, 1fr);
-          gap: var(--spacing-md);
-        }
-        @media (max-width: 1024px) {
-          .quick-actions-row { grid-template-columns: repeat(3, 1fr); }
-        }
-        @media (max-width: 640px) {
-          .quick-actions-row { grid-template-columns: repeat(2, 1fr); }
-        }
-        .quick-action-btn {
+        .stat-card-body {
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding: 14px;
-          background: var(--color-surface, white);
-          border: 1px solid var(--color-border, #e5e7eb);
+          gap: 14px;
+        }
+        .stat-card-icon {
+          width: 44px;
+          height: 44px;
           border-radius: 12px;
-          cursor: pointer;
-          text-align: left;
-          transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-        }
-        .quick-action-btn:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-          border-color: var(--color-primary, #6366f1);
-        }
-        .quick-action-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
         }
-        .quick-action-label {
-          font-size: 0.92rem;
-          font-weight: 700;
-          color: var(--color-text-main);
+        .stat-card-value {
+          display: flex;
+          align-items: baseline;
+          flex-wrap: wrap;
+          column-gap: 8px;
+          font-size: 1.6rem;
+          font-weight: 800;
+          letter-spacing: -0.02em;
           line-height: 1.1;
         }
-        .quick-action-desc {
-          font-size: 0.72rem;
+        .stat-card-label {
+          font-size: 0.88rem;
+          font-weight: 600;
+          letter-spacing: 0;
+          color: var(--color-text-main);
+        }
+        .stat-card-sub {
+          font-size: 0.78rem;
           color: var(--color-text-subtle);
-          margin-top: 2px;
+          margin: 2px 0 0 0;
+        }
+        .load-stock-fab {
+          position: fixed;
+          right: 24px;
+          bottom: 24px;
+          z-index: 50;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 14px 20px;
+          border: none;
+          border-radius: 999px;
+          background: var(--color-primary, #6366f1);
+          color: #fff;
+          font-size: 0.92rem;
+          font-weight: 700;
+          cursor: pointer;
+          box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .load-stock-fab:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 12px 28px rgba(37, 99, 235, 0.45);
+        }
+        @media (max-width: 640px) {
+          .load-stock-fab { right: 16px; bottom: 16px; padding: 14px; }
+          .load-stock-fab span { display: none; }
         }
 
         .today-grid-2 {

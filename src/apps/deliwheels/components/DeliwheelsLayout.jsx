@@ -13,8 +13,12 @@ import {
   ClipboardCheck,
   CalendarCheck,
   Settings2,
+  PackagePlus,
+  PackageMinus,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { logout } from "@/services/api";
+import { useApprovalCount } from "../context/useApprovalCount";
 
 const dwNavItems = [
   {
@@ -30,7 +34,16 @@ const dwNavItems = [
     icon: CalendarCheck,
     path: "/deliwheels/daily-summary",
   },
-  { id: "stock", label: "Stock", icon: Warehouse, path: "/deliwheels/stock" },
+  {
+    id: "stock-group",
+    label: "Stock",
+    icon: Warehouse,
+    children: [
+      { id: "stock", label: "Loaded", icon: PackagePlus, path: "/deliwheels/stock" },
+      { id: "returns", label: "Returns", icon: RotateCcw, path: "/deliwheels/returns" },
+      { id: "unloads", label: "Unloads", icon: PackageMinus, path: "/deliwheels/unloads" },
+    ],
+  },
   { id: "sales", label: "Sales", icon: Wallet, path: "/deliwheels/sales" },
   {
     id: "reports",
@@ -40,7 +53,6 @@ const dwNavItems = [
   },
   { id: "approvals", label: "Approvals", icon: ClipboardCheck, path: "/deliwheels/approvals" },
   { id: "credits", label: "Credits", icon: CreditCard, path: "/deliwheels/credits" },
-  { id: "returns", label: "Returns", icon: RotateCcw, path: "/deliwheels/returns" },
   // Set up once, rarely changed — grouped so the daily items stay at the top
   {
     id: "setup",
@@ -57,12 +69,19 @@ const dwNavItems = [
 const dwBrand = { name: "DeliWheels", letter: "D" };
 
 const DeliwheelsLayout = ({ children }) => {
+  const navigate = useNavigate();
+  const approvalCount = useApprovalCount();
   return (
     <DashboardLayout
       navItems={dwNavItems}
       brand={dwBrand}
       backLink={{ label: "Back to Nexo", path: "/" }}
       onLogout={logout}
+      notification={{
+        count: approvalCount,
+        title: "pending approvals",
+        onClick: () => navigate("/deliwheels/approvals"),
+      }}
     >
       {children}
     </DashboardLayout>
