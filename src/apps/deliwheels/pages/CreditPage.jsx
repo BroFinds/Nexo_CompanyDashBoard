@@ -229,7 +229,7 @@ export default function CreditPage() {
                           <tr key={s.saleUid ?? i} style={{ borderTop: "1px solid var(--border-subtle)" }}>
                             <td style={{ padding: "10px 16px" }}>{fmtDate(s.saleDate)}</td>
                             <td style={{ padding: "10px 16px", fontFamily: "monospace", fontSize: "0.8rem", color: "var(--color-text-subtle)" }}>{s.invoiceNo || "—"}</td>
-                            <td style={{ padding: "10px 16px", textAlign: "right", fontWeight: "700", color: "#dc2626" }}>{fmt(s.grandTotal)}</td>
+                            <td style={{ padding: "10px 16px", textAlign: "right", fontWeight: "700", color: "#dc2626" }}>{fmt(s.creditAmount)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -237,7 +237,7 @@ export default function CreditPage() {
                         <tr style={{ borderTop: "2px solid var(--border-subtle)", background: "var(--bg-body)" }}>
                           <td colSpan={2} style={{ padding: "10px 16px", fontWeight: "700", fontSize: "0.8rem" }}>Total Credit</td>
                           <td style={{ padding: "10px 16px", textAlign: "right", fontWeight: "800", color: "#dc2626", fontFamily: "monospace" }}>
-                            {fmt(creditSales.reduce((s, c) => s + parseFloat(c.grandTotal ?? 0), 0))}
+                            {fmt(creditSales.reduce((s, c) => s + parseFloat(c.creditAmount ?? 0), 0))}
                           </td>
                         </tr>
                       </tfoot>
