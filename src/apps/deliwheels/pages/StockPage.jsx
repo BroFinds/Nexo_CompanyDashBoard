@@ -32,7 +32,6 @@ const StockPage = () => {
     updateStock,
     fetchStockLogs,
     fetchStockEntry,
-    deleteStockEntry,
   } = useDeliwheels();
   const { products } = useGlobal();
   const [filterVehicle, setFilterVehicle] = useState("all");
@@ -171,17 +170,6 @@ const StockPage = () => {
     setLogsError(null);
   };
 
-  const handleDeleteDelivery = async (delivery) => {
-    for (const entry of delivery.entries) {
-      await deleteStockEntry(entry.stock_uid);
-    }
-    handleCloseLogs();
-    const filters = {};
-    if (filterVehicle !== "all") filters.vehicleUid = filterVehicle;
-    if (filterFromDate && filterToDate) { filters.fromDate = filterFromDate; filters.toDate = filterToDate; }
-    await searchStock(filters);
-  };
-
   return (
     <DeliwheelsLayout
       headerTitle="Stock"
@@ -256,7 +244,6 @@ const StockPage = () => {
         error={logsError}
         onClose={handleCloseLogs}
         products={products}
-        onDeleteDelivery={handleDeleteDelivery}
       />
     </DeliwheelsLayout>
   );

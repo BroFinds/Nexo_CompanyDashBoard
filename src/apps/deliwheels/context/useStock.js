@@ -124,7 +124,8 @@ export const useStock = () => {
           createdBy: session.userId,
         });
         const mapped = mapStockAdded(data);
-        setStock((prev) => [mapped, ...prev]);
+        // A top-up comes back as the same load row with its new total: replace it rather than adding a second one
+        setStock((prev) => [mapped, ...prev.filter((x) => x.stock_uid !== mapped.stock_uid)]);
         return mapped;
       } catch (e) {
         console.error("addStockLoading:", e);
@@ -165,10 +166,6 @@ export const useStock = () => {
     return mapStockAdded(data);
   }, []);
 
-  const deleteStockEntry = useCallback(async (stockUid) => {
-    await api.delete(`/api/v1/deliwheels/stock-added/${stockUid}`);
-    setStock((prev) => prev.filter((s) => s.stock_uid !== stockUid));
-  }, []);
 
   return {
     stock,
@@ -183,6 +180,5 @@ export const useStock = () => {
     updateStock,
     fetchStockLogs,
     fetchStockEntry,
-    deleteStockEntry,
   };
 };

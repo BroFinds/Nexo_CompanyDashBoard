@@ -103,23 +103,18 @@ const SalesPage = () => {
   const showResults = salesLoaded;
   const visibleSales = showResults ? filteredSales : [];
 
-  // A sale is paid only when admin explicitly clicks "Collect Cash" (which sets
-  // payment_status_text to "PAID" via PATCH /collect-payment).  Never infer paid
-  // status from the payment mode — Cash/UPI sales stay PENDING until collected.
-  const isPaid = (s) =>
-    (s.payment_status_text || "").toUpperCase() === "PAID";
-  const paidRevenue = visibleSales.reduce(
-    (sum, s) => (isPaid(s) ? sum + Number(s.grand_total || 0) : sum),
-    0,
-  );
-  const pendingRevenue = visibleSales.reduce(
-    (sum, s) => (!isPaid(s) ? sum + Number(s.grand_total || 0) : sum),
-    0,
-  );
-  const totalRevenue = paidRevenue + pendingRevenue;
+  // Money from each sale's split: cash + UPI is taken in at the shop, credit stays owed by the shop. A sale
+  // without split amounts counts whole under its payment mode.
+  const hasSplit = (s) => Number(s.cash_amount || 0) + Number(s.upi_amount || 0) + Number(s.credit_amount || 0) > 0;
+  const creditOf = (s) => hasSplit(s)
+    ? Number(s.credit_amount || 0)
+    : ((s.payment_mode_text || "").toUpperCase().includes("CREDIT") ? Number(s.grand_total || 0) : 0);
+  const pendingRevenue = visibleSales.reduce((sum, s) => sum + creditOf(s), 0);
+  const totalRevenue = visibleSales.reduce((sum, s) => sum + Number(s.grand_total || 0), 0);
+  const paidRevenue = totalRevenue - pendingRevenue;
   const totalOrders = visibleSales.length;
-  const paidCount = visibleSales.filter(isPaid).length;
-  const pendingCount = totalOrders - paidCount;
+  const pendingCount = visibleSales.filter((s) => creditOf(s) > 0).length;
+  const paidCount = totalOrders - pendingCount;
 
   const isCredit = (s) => (s.payment_mode_text || '').toUpperCase().includes('CREDIT');
   const creditRevenue = visibleSales.reduce(

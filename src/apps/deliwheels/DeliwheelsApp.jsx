@@ -10,7 +10,7 @@ import ReportsPage from './pages/ReportsPage';
 import CreditPage from './pages/CreditPage';
 import ReturnsPage from './pages/ReturnsPage';
 import UnloadsPage from './pages/UnloadsPage';
-import ApprovalsPage from './pages/ApprovalsPage';
+import TripsPage from './pages/TripsPage';
 import DailySummaryPage from './pages/DailySummaryPage';
 
 const DeliwheelsApp = () => {
@@ -25,7 +25,7 @@ const DeliwheelsApp = () => {
         <Route path="/stock" element={<StockPage />} />
         <Route path="/sales" element={<SalesPage />} />
         <Route path="/reports" element={<ReportsPage />} />
-        <Route path="/approvals" element={<ApprovalsPage />} />
+        <Route path="/trips" element={<TripsPage />} />
         <Route path="/credits" element={<CreditPage />} />
         <Route path="/returns" element={<ReturnsPage />} />
         <Route path="/unloads" element={<UnloadsPage />} />

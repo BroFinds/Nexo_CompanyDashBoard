@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "@/services/api";
-import { useApprovalCount } from "../context/useApprovalCount";
+import { useTripAttentionCount } from "../context/tripsApi";
 
 const dwNavItems = [
   {
@@ -51,7 +51,7 @@ const dwNavItems = [
     icon: FileBarChart,
     path: "/deliwheels/reports",
   },
-  { id: "approvals", label: "Approvals", icon: ClipboardCheck, path: "/deliwheels/approvals" },
+  { id: "trips", label: "Trips", icon: ClipboardCheck, path: "/deliwheels/trips" },
   { id: "credits", label: "Credits", icon: CreditCard, path: "/deliwheels/credits" },
   // Set up once, rarely changed — grouped so the daily items stay at the top
   {
@@ -70,7 +70,7 @@ const dwBrand = { name: "DeliWheels", letter: "D" };
 
 const DeliwheelsLayout = ({ children }) => {
   const navigate = useNavigate();
-  const approvalCount = useApprovalCount();
+  const attentionCount = useTripAttentionCount();
   return (
     <DashboardLayout
       navItems={dwNavItems}
@@ -78,9 +78,9 @@ const DeliwheelsLayout = ({ children }) => {
       backLink={{ label: "Back to Nexo", path: "/" }}
       onLogout={logout}
       notification={{
-        count: approvalCount,
-        title: "pending approvals",
-        onClick: () => navigate("/deliwheels/approvals"),
+        count: attentionCount,
+        title: "trips to settle and records that need attention",
+        onClick: () => navigate("/deliwheels/trips"),
       }}
     >
       {children}

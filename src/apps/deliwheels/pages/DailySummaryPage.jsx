@@ -6,12 +6,12 @@ import Skeleton from "@shared/components/ui/Skeleton";
 import { AlertCircle, ChevronDown, ChevronRight, Truck, User, Route as RouteIcon } from "lucide-react";
 import api, { getSession } from "@/services/api";
 import { useDeliwheels } from "../context/DeliwheelsContext";
+import { useGlobal } from "../../nexo/context/GlobalContext";
+import { fetchCompanyUnloads, fetchReasons } from "../context/dayCloseApi";
 import { formatMoney, paymentStatusVariant } from "../utils/salesFormat";
-import DayCloseSection from "../components/DayCloseSection";
 
 // Daily Summary: pick a day and an active vehicle → its money, sales (with items) and returns
-// (getdeliwheels_vehicledailyreport), and the day itself: stock, counting, collect & close, unloads
-// (DayCloseSection, the backend's vehicle-day endpoints).
+// (getdeliwheels_vehicledailyreport). Settling a trip (count, cash) is on the Trips page.
 
 const todayISO = () => {
   const d = new Date();
@@ -47,22 +47,12 @@ const th = {
 const td = { padding: "12px 14px", whiteSpace: "nowrap" };
 const sectionTitle = { fontSize: "var(--text-lg)", fontWeight: "600", margin: "var(--spacing-xl) 0 12px" };
 
-// Long lists show the first 10 rows; "Show all" expands them inside a scrolling box
-const PREVIEW_ROWS = 10;
-const EXPANDED_MAX_HEIGHT = "480px";
+// Every list shows all its rows inside a fixed-height box that scrolls (the header row stays visible)
+const LIST_MAX_HEIGHT = "480px";
 
 const useRowLimit = (rows) => {
-  const [expanded, setExpanded] = useState(false);
-  const hasMore = rows.length > PREVIEW_ROWS;
-  const toggle = useCallback(() => setExpanded((e) => !e), []);
-  const reset = useCallback(() => setExpanded(false), []);
-  return {
-    visible: expanded || !hasMore ? rows : rows.slice(0, PREVIEW_ROWS),
-    expanded,
-    hasMore,
-    toggle,
-    reset,
-  };
+  const reset = useCallback(() => {}, []);
+  return { visible: rows, expanded: true, hasMore: false, toggle: reset, reset };
 };
 
 const ShowMore = ({ limit, total }) =>
@@ -76,11 +66,7 @@ const ShowMore = ({ limit, total }) =>
     </button>
   ) : null;
 
-const scrollBox = (limit) => ({
-  overflowX: "auto",
-  overflowY: limit.expanded ? "auto" : "visible",
-  maxHeight: limit.expanded ? EXPANDED_MAX_HEIGHT : "none",
-});
+const scrollBox = () => ({ overflowX: "auto", overflowY: "auto", maxHeight: LIST_MAX_HEIGHT });
 
 const SummaryTile = ({ label, value, hint }) => (
   <Card>
@@ -159,6 +145,25 @@ const DailySummaryPage = () => {
       cancelled = true;
     };
   }, [selectedUid, date, refreshKey]);
+
+  // The vehicle's unloads that day (stock taken off the vehicle, with a reason)
+  const { products } = useGlobal();
+  const [unloads, setUnloads] = useState([]);
+  const [reasons, setReasons] = useState([]);
+  useEffect(() => { fetchReasons().then(setReasons).catch(() => {}); }, []);
+  useEffect(() => {
+    if (!selectedUid || !date) return;
+    let cancelled = false;
+    fetchCompanyUnloads({ vehicleUid: selectedUid, fromDate: date, toDate: date })
+      .then((rows) => { if (!cancelled) setUnloads(rows); })
+      .catch(() => { if (!cancelled) setUnloads([]); });
+    return () => { cancelled = true; };
+  }, [selectedUid, date, refreshKey]);
+  const productName = (uid) => {
+    const p = (products || []).find((x) => (x.product_uid || x.productUid) === uid);
+    return p?.product_name || p?.productName || "—";
+  };
+  const reasonName = (uid) => reasons.find((r) => r.uid === uid)?.name || "—";
 
   const totals = report?.totals || {};
   const vehicle = report?.vehicle || {};
@@ -261,8 +266,8 @@ const DailySummaryPage = () => {
               <h3 style={sectionTitle}>Summary</h3>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "12px" }}>
                 <SummaryTile label="Revenue" value={`₹${formatMoney(totals.total_revenue)}`} hint={`${totals.sales_count || 0} sales · ${totals.shops_visited || 0} shops`} />
-                <SummaryTile label="Collected" value={`₹${formatMoney(totals.total_collected)}`} />
-                <SummaryTile label="Pending" value={`₹${formatMoney(totals.total_pending)}`} />
+                <SummaryTile label="Cash + UPI" value={`₹${formatMoney(totals.total_collected)}`} />
+                <SummaryTile label="Credit" value={`₹${formatMoney(totals.total_pending)}`} />
                 <SummaryTile label="Cash" value={`₹${formatMoney(totals.total_cash)}`} />
                 <SummaryTile label="UPI" value={`₹${formatMoney(totals.total_upi)}`} />
                 <SummaryTile label="Credit" value={`₹${formatMoney(totals.total_credit)}`} />
@@ -271,7 +276,7 @@ const DailySummaryPage = () => {
               </div>
 
               {/* Day: status, stock, count & close, unloads */}
-              <DayCloseSection vehicleUid={selectedUid} date={date} onClosed={() => setRefreshKey((k) => k + 1)} />
+              
 
               {/* Sales with items */}
               <h3 style={sectionTitle}>Sales ({sales.length})</h3>
@@ -350,6 +355,32 @@ const DailySummaryPage = () => {
                   </table>
                 </div>
                 <ShowMore limit={salesLimit} total={sales.length} />
+              </Card>
+
+              {/* Unloads */}
+              <h3 style={sectionTitle}>Unloads ({unloads.length})</h3>
+              <Card padding="none">
+                <div style={scrollBox()}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid var(--border-subtle)", background: "var(--bg-body)" }}>
+                      {["Product", "Qty", "Reason", "Note"].map((h) => <th key={h} style={th}>{h}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {unloads.length === 0 ? (
+                      <EmptyRow colSpan={4} text="No unloads on this day." />
+                    ) : unloads.map((u) => (
+                      <tr key={u.unloadedStockUid} style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+                        <td style={{ ...td, fontWeight: "600" }}>{productName(u.productUid)}</td>
+                        <td style={td}>{qty(u.quantity)}</td>
+                        <td style={td}>{reasonName(u.reasonUid)}</td>
+                        <td style={td}>{u.reasonNote || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                </div>
               </Card>
 
               {/* Returns */}

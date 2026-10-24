@@ -13,6 +13,52 @@ const fmtDate = (raw) => {
   return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
 };
 
+// wa.me needs the number with the country code; a 10-digit number is taken as Indian
+const waNumber = (raw) => {
+  const digits = String(raw ?? "").replace(/\D/g, "").replace(/^0+/, "");
+  if (digits.length === 10) return `91${digits}`;
+  return digits.length >= 11 && digits.length <= 15 ? digits : null;
+};
+
+// Opens WhatsApp with a reminder of the pending amount, ready for the admin to send
+const reminderLink = (shop) => {
+  const number = waNumber(shop.shopContactNumber);
+  if (!number) return null;
+  const name = shop.shopOwnerName || shop.shopName;
+  const text = `Hello ${name}, this is a reminder that ${fmt(shop.remainingCredit)} is pending for ${shop.shopName}. `
+    + "Please clear it at the earliest. Thank you.";
+  return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
+};
+
+const WhatsAppIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.22 3.08.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35zM12.04 21.8h-.01a9.8 9.8 0 0 1-5-1.37l-.36-.21-3.72.98 1-3.63-.24-.37a9.82 9.82 0 0 1-1.5-5.24c0-5.42 4.42-9.84 9.85-9.84 2.63 0 5.1 1.03 6.96 2.89a9.78 9.78 0 0 1 2.88 6.96c0 5.43-4.42 9.84-9.86 9.84zm8.38-18.22A11.75 11.75 0 0 0 12.04.1C5.5.1.17 5.42.17 11.97c0 2.09.55 4.13 1.59 5.93L.07 24l6.25-1.64a11.84 11.84 0 0 0 5.71 1.46h.01c6.54 0 11.87-5.32 11.87-11.87 0-3.17-1.23-6.15-3.48-8.39z" />
+  </svg>
+);
+
+// Green WhatsApp button; greyed out when the shop has no usable phone number
+function WhatsAppButton({ shop, size = 16, padding = "6px" }) {
+  const link = reminderLink(shop);
+  return (
+    <a
+      href={link ?? undefined}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => { e.stopPropagation(); if (!link) e.preventDefault(); }}
+      title={link ? `Send a WhatsApp reminder to ${shop.shopOwnerName || shop.shopName}` : "No valid phone number for this shop"}
+      aria-disabled={!link}
+      style={{
+        display: "inline-flex", alignItems: "center", justifyContent: "center", padding,
+        borderRadius: "var(--radius-sm)", color: link ? "#fff" : "var(--color-text-subtle)",
+        background: link ? "#25D366" : "var(--bg-body)", cursor: link ? "pointer" : "not-allowed",
+        opacity: link ? 1 : 0.6, textDecoration: "none",
+      }}
+    >
+      <WhatsAppIcon size={size} />
+    </a>
+  );
+}
+
 export default function CreditPage() {
   const {
     creditSummary, creditSales, creditPayments,
@@ -135,6 +181,7 @@ export default function CreditPage() {
                   }}>
                     {fmt(shop.remainingCredit)}
                   </span>
+                  {parseFloat(shop.remainingCredit) > 0 && <WhatsAppButton shop={shop} size={14} padding="5px" />}
                   <ChevronRight size={14} style={{ color: "var(--color-text-subtle)" }} />
                 </div>
               </div>
@@ -156,7 +203,8 @@ export default function CreditPage() {
                     <span>Outstanding: <strong style={{ color: "#dc2626" }}>{fmt(selectedShop.remainingCredit)}</strong></span>
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: "8px" }}>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  {parseFloat(selectedShop.remainingCredit) > 0 && <WhatsAppButton shop={selectedShop} size={18} padding="8px" />}
                   <Button onClick={() => { setShowPayForm(!showPayForm); setFormError(""); }} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem" }}>
                     <Plus size={14} /> Record Payment
                   </Button>
